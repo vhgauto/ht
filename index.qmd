@@ -1321,7 +1321,9 @@ Comienzo el análisis de palabras individuales comparando los nombres usados par
 
 Sargenti es claramente Flor, sin lugar a duda. Siempre lo supimos, no es nada nuevo, pero que la estadística esté de acuerdo es satisfactorio. Personalmente, siempre pensé en Calori como Cal<ins>o</ins>, pero no, es Cal<ins>u</ins>.
 
-Las fotos de las caras de Flor y Calu las saqué de [este](https://www.instagram.com/p/BSzcCh5Bwyi/) post en Instagram, la primera imagen oficial del podcast. Éramos tan jóvenes.
+Las caras de Flor y Calu las saqué de [este](https://www.instagram.com/p/BSzcCh5Bwyi/) post en Instagram, publicada el día del primer episodio. Éramos tan jóvenes.
+
+Ya que estamos, mi foto favorita de [Flor](https://www.instagram.com/p/B_YDJIPAcmM/), de [Calu](https://www.instagram.com/p/CAf_wyHgysM/) y [ambos](https://www.instagram.com/p/BrXuVtUlB27/).
 
 ## Nubes de palabras {#sec-tex-nube}
 
@@ -2060,9 +2062,13 @@ Junto con el análisis de texto, algo con lo que nunca había tratado era con ar
 
 Las imágenes de cada capítulo (según lo encontrado en Spotify) están disponibles en tres resoluciones, 64, 300 y 640 píxeles, cuadradas. El primer paso fue descargar todas las imágenes y registrar la fecha de uso. Luego para agrupar los episodios por su imagen se calculó en color promedio, que es representativo de todas aquellas imágenes repetidas. Para ello se descompuso cada imagen en sus colores básicos (rojo, verde, azul), se promedió para todos los píxeles y se generó un color individual para cada episodio. Luego se agrupó entre estos de acuerdo al color promedio.
 
+Pueden ver las imágenes en los siguientes links: [A](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/A.jpg), [B](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/B.jpg), [C](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/C.jpg), [D](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/D.jpg), [E](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/E.jpg), [F](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/F.jpg), [G](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/G.jpg), [H](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/H.jpg), [I](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/I.jpg), [J](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/J.jpg).
+
 Incluyendo <ht>HOY TRASNOCHE DIARIO</ht>, hay 14 imágenes únicas. Existen dos pares cuya única diferencia es la presencia del logo de POSTA, se agruparon convenientemente quedando dos imágenes, **A** y **C**, de la @fig-10. Para el <ht>HOY PORONGA</ht> aparecen dos disponibles, aunque es una diferencia que no pude detectar visualmente, por lo se que unificaron (**E**). Algo similar sucede con el logo usado actualmente: aparecen dos conjuntos de imágenes, que claramente son las mismas (**J**). Descartando las versiones que a simple vista son idénticas, de las 14 imágenes únicas, quedan 10, de la **A** a la **J**.
 
 La **D** fue utilizada una única vez, en [2019](https://open.spotify.com/episode/6j1TkNXmVec8G7MU5KcwTL), al igual que la **G** en [2020](https://open.spotify.com/episode/6ITrKiYfcqmUKJWfH5vgiz). Muy reflejo de su época. La **I** fue un <ht>HOY PORONGA</ht> especial, dedicado a una [película](https://open.spotify.com/episode/0EatJAAU4faIkxw1J7Zqb2) que se escuchaba poco y se entendía menos. Las imágenes tradicionales, ponele, que identifican a <ht>HOY TRASNOCHE</ht> son la **B** (7 usos), **C** (7), **F** (73) y **J** (75). Y <ht>HOY TRASNOCHE DIARIO</ht>, **H** (67), claro.
+
+La imagen **E** que ilustra los <ht>HOY PORONGA</ht> fue usada en 5 oportunidades. [Acá](https://www.instagram.com/p/BlYYvcLnjNh/) podemos ver el inicio de esta hermosa saga.
 
 Es claro que ya encontraron su identidad en cuanto al logo, que con pocos cambios, viene siendo el mismo desde finales de 2018 (inicio de imagen **F**).
 
