@@ -1,0 +1,64 @@
+/*-- scss:defaults --*/
+
+// https://ucsb-meds.github.io/customizing-quarto-websites/#/title-slide
+
+// colores
+$a: #ffc10e;
+$r: #ee4121;
+$g: #333333;
+
+// fuente
+@import url('https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('friz_bold', 'firz/Friz Quadrata Bold.otf');
+
+// tabla de contenidos, toc
+// https://quarto.org/docs/output-formats/html-themes.html#table-of-contents
+$toc-active-border: $a;
+
+// botón de copiado, en la esquina superior derecha de <code>
+// https://quarto.org/docs/output-formats/html-themes.html#code-copy
+$btn-code-copy-color: $a;
+$btn-code-copy-color-active: $r;
+
+/*-- scss:rules --*/
+
+h1, h2, h3 {
+  color: $a;
+  font-family: friz_bold;
+}
+
+// para HOY TRASNOCHE, y HOY TRASNOCHE DIARIO
+ht {
+  color: $a;
+  background-color: $r;
+  font-family: friz_bold;
+  font-weight: bold;
+}
+
+code {
+  color: $a;
+  background-color: $g;
+  font-family: Monospace;
+}
+
+.toc-section-number {
+  color: $r;
+}
+
+.sidebar nav[role=doc-toc] ul>li>a.active {
+    border-left: 1px solid $a;
+    color: $a !important;
+}
+
+.sidebar nav[role=doc-toc] ul>li>ul>li>a.active {
+    border-left: 1px solid #ffc10e;
+    color: #ffc10e !important;
+}
+
+// cuando paso el mouse sobre un link, pasa de rojo ($r) a amarillo ($a)
+a:hover {
+    color: $a
+}
+
+
