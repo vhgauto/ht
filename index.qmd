@@ -1,0 +1,2797 @@
+---
+lang: es
+number-sections: true
+format: 
+  html:
+    code-link: true
+    code-fold: true
+    code-summary: "Desplegar código"
+    code-line-numbers: true
+    code-block-background: "red"
+    smooth-scroll: true
+    link-external-icon: true
+    linkcolor: "#ee4121"
+    link-external-newwindow: true
+    embed-resources: true
+    # https://quarto.org/docs/reference/formats/html.html#table-of-contents
+    toc: true
+    toc-float: false
+    toc-location: left
+    toc-title: "Índice"
+    theme: 
+      - darkly
+      - mystyles.scss
+    backgroundcolor: "black"
+    fontcolor: "white"
+    mainfont: Titillium Web
+editor: source
+editor_options: 
+  chunk_output_type: console
+crossref:
+  chapters: true
+  fig-prefix: "figura"
+  sec-prefix: "sección"
+execute: 
+  eval: true
+  echo: true
+  message: false
+  warning: false
+---
+
+<!-- https://ucsb-meds.github.io/customizing-quarto-websites/#/title-slide -->
+
+<!-- logo al inicio -->
+![](pic/logo.jpeg)
+
+<!-- agregar '{.unnumbered}' remueve la numeración del header -->
+<!-- https://quarto.org/docs/output-formats/html-basics.html#section-numbering -->
+
+<!-- posición de toc -->
+<!-- https://rpubs.com/stevepowell99/floating-css -->
+
+<!-- que el contenido (imagen, code) se desplace a la derecha -->
+<!-- https://quarto.org/docs/authoring/article-layout.html#overflowing-content -->
+
+# El mejor podcast del mundo {.unnumbered}
+
+<!-- cómo personalizar el hipervínculo interno de referencias cruzadas -->
+<!-- https://quarto.org/docs/books/book-crossrefs.html#creating-references -->
+
+[<ht>HOY TRASNOCHE</ht>](https://open.spotify.com/show/6C4MdNWQSPhmzBlIVau30e) es el podcast de cine definitivo. Conducido por **Fiorella Sargenti** y **Santiago Calori**, producido por [POSTA](https://www.posta.fm/podcast/hoy-trasnoche/), inició el [17 de abril de 2017](https://open.spotify.com/episode/5ceIa28JqMUOo3cwU8K5jG), es un programa semanal (usualmente los viernes) en el que durante 1 hora se habla de 🌈CINE🌈. Ya sean los estrenos de la semana, las noticias del momento, caprichos variados, sagas, recomendaciones, anécdotas de la industria, personajes pintorescos, películas inmirables, videoclubs rancios, mascotas come-cable, camperas de corderito, retratos con y sin perspectiva de género, etc.
+
+Este reporte está dividido en cinco partes principales. Comienzo con la descripción de la fuente de datos y consideraciones generales (@sec-intro). Los análisis de datos y visualizaciones se dividen en: datos numéricos (@sec-num), como la duración de los episodios, la cantidad de horas totales de contenido anual y las fechas de publicación; palabras (@sec-tex), a partir de los títulos y descripciones de los episodios; imágenes (@sec-img), provenientes de las tapas de los capítulos; y estudio de las películas analizadas (@sec-pel), como actores y directores más frecuentes. Finalmente, conclusiones y agradecimientos.
+
+Tienen el menú desplegable a la izquierda para moverse entre secciones.
+
+# Aclaraciones iniciales {#sec-intro}
+
+::: {.column-screen-inset-right}
+```{r 1_paquetes_fuentes_datos}
+# A.- paquetes ------------------------------------------------------------
+
+library(tidyverse)
+library(lubridate)
+library(showtext)
+library(ggtext)
+library(fontawesome)
+library(patchwork)
+library(here)
+library(glue)
+
+# B.- fuentes -------------------------------------------------------------
+
+# browseURL("https://stackoverflow.com/questions/34522732/changing-fonts-in-ggplot2")
+# font_files()
+# font_add("friz", "friz.ttf")
+
+font_add("friz_bold", here("friz/Friz Quadrata Bold.otf")) # título
+font_add_google(name = "Bebas Neue", 
+                family = "bebas",
+                bold.wt = 600) # resto del texto
+font_add_google(name = "Titillium Web", 
+                family = "titillium",
+                bold.wt = 600) # subtitulo
+showtext_auto()
+showtext_opts(dpi = 300)
+
+# íconos
+# browseURL("https://albert-rapp.de/posts/ggplot2-tips/08_fonts_and_icons/08_fonts_and_icons.html")
+font_add("fa-reg", here("icon/Font Awesome 5 Free-Regular-400.otf"))
+font_add("fa-brands", here("icon/Font Awesome 5 Brands-Regular-400.otf"))
+font_add("fa-solid", here("icon/Font Awesome 5 Free-Solid-900.otf"))
+
+# C.- datos ---------------------------------------------------------------
+
+# browseURL("https://www.rcharlie.com/spotifyr/index.html")
+
+# library(spotifyr)
+# 
+# Sys.setenv(SPOTIFY_CLIENT_ID = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+# Sys.setenv(SPOTIFY_CLIENT_SECRET = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+# 
+# access_token <- get_spotify_access_token()
+# 
+id_HT <- "6C4MdNWQSPhmzBlIVau30e"
+
+# función p/descargar todos los datos de HT
+# f_ep <- function(x) {
+#   e <- get_show_episodes(id = id_HT,
+#                          limit = 50,
+#                          include_meta_info = FALSE,
+#                          offset = x) |> as_tibble()
+# 
+#   return(e)
+# }
+# 
+# descargo todos los datos, incluyendo las URL de las imágenes
+# map(.x = seq(0, 250, 50), ~ f_ep(x = .x)) |>
+#   list_rbind() |>
+#   unnest(images) |>
+#   write_tsv(here("data/spotify_datos_url.tsv"))
+# 
+# descargo todos los datos, SIN las URL de las imágenes
+# map(.x = seq(0, 250, 50), ~ f_ep(x = .x)) |>
+#   list_rbind() |>
+#   unnest(images) |>
+#   filter(width == 640) |>
+#   write_tsv(here("data/spotify_datos.tsv"))
+
+HT_all <- read_tsv(here("data/spotify_datos.tsv")) |> 
+  distinct(id, .keep_all = TRUE)
+
+# Hoy Trasnoche Diario, durante pandemia
+vec_HT_diario <- HT_all %>% 
+  filter(str_detect(name, pattern = "Diario")) |> 
+  pull(name)
+
+# Podcast Mató Mil
+vec_HT_matomil <- HT_all %>% 
+  filter(str_detect(name, pattern = "Mató")) |> 
+  pull(name)
+
+# miscelaneo
+vec_HT_misc <- HT_all %>% 
+  filter(str_detect(name, pattern = "Presentamos")) |> 
+  pull(name)
+
+# todo lo que NO es Hoy Trasnoche
+vec_HT_otros <- c(vec_HT_diario, vec_HT_matomil, vec_HT_misc)
+
+# Hoy Trasnoche Diario
+HT_diario <- HT_all |> 
+  filter(name %in% vec_HT_diario)
+
+# Hoy Trasnoche tradicional, de todos los "viernes"
+HT_trad <- HT_all |> 
+  filter(!name %in% vec_HT_otros)
+
+# caption
+icon_twitter <- "<span style='font-family:fa-brands; color:#ee4121;'>&#xf099;</span>"
+icon_github <- "<span style='font-family:fa-brands; color:#ee4121;'>&#xf09b;</span>"
+fuente <- "<span style='color:#ee4121;'>Datos:</span> <span style='color:#ffc10e;'>{**spotifyr**}</span>"
+autor <- "<span style='color:#ee4121;'>Autor:</span> <span style='color:#ffc10e;'>**Víctor Gauto**</span>"
+sep <- glue("<span style = 'color:#ee4121;'>**|**</span>")
+usuario <- glue("<span style = 'color:#ffc10e;'>**vhgauto**</span>")
+
+HT_caption <- glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")
+
+HT <- glue("<span style='font-family:friz_bold; font-weight: bold; color:#ffc10e; background-color:#ee4121'>HOY TRASNOCHE</span>")
+
+HTD <- glue("<span style='font-family:friz_bold; font-weight: bold; color:#ffc10e; background-color:#ee4121'>HOY TRASNOCHE DIARIO</span>")
+
+```
+:::
+
+<span style='background-color:#333333'>Antes que nada, según un coso que cuenta el tiempo de lectura, leer todo esto te va a llevar algo más de **25 minutos**. Segundo, la versión TL;DR es ir directamente a las imágenes (son 13).</span>
+
+Todos los análisis llevados a cabo utilizan dos grandes bases de datos. Para los episodios, la que está disponible en el perfil de <ht>HOY TRASNOCHE</ht> en [Spotify](https://open.spotify.com/show/6C4MdNWQSPhmzBlIVau30e); para las películas analizadas, [The Movie Database](https://www.themoviedb.org/) (TMDB) desde donde obtuve los detalles.
+
+Para todos los gráficos aquí exhibidos usé lenguaje de programación <code>R</code> (4.2.1), en el entorno de edición [RStudio](https://posit.co/products/open-source/rstudio/) (2022.12.0 Build 353). Este reporte se confeccionó usando [Quarto](https://quarto.org/) (1.2.335).
+
+Los datos de Spotify son accesibles mediante el paquete [<code>{spotifyr}</code>](https://www.rcharlie.com/spotifyr/index.html). Es necesario contar con acceso a la [API](https://developer.spotify.com/dashboard/applications) y generar sus credenciales. De Spotify puede obtenerse el título del episodio, la descripción, la duración, el idioma, el tipo de contenido, la fecha de publicación, el enlace para escucharlo, la dirección donde se aloja la imagen que ilustra el episodio, un código de identificación, entre otros.
+
+La lista de películas vistas se obtuvo mediante web scrapping usando [<code>{rvest}</code>](https://rvest.tidyverse.org/) y los detalles de cada una a partir de [<code>{TMDb}</code>](https://www.rdocumentation.org/packages/TMDb/versions/1.1). Es requisito poseer acceso a la API y generar la [clave](https://developers.themoviedb.org/3/getting-started/introduction) antes que nada. A partir TMDB se pueden extraer muchos datos de películas. La lista de personas involucradas en el equipo productivo, como ser guion, dirección, edición, sonido, efectos visuales, luces, etc. Del elenco, están disponibles los nombres de los actores y de sus personajes. Además, los detalles técnicos, como fecha de estreno, país de origen, idioma hablado, género y mucho más.
+
+Las figuras fueron creadas con [<code>{ggplot2}</code>](https://ggplot2.tidyverse.org/reference/theme.html) y todo el procesamiento de datos se realizó usando [<code>{tidyverse}</code>](https://www.tidyverse.org/) como herramienta fundamental. Debajo de cada figura tienen el botón para desplegar el código de programación que la generó.
+
+Dividí los episodios en tres grandes grupos: <ht>HOY TRASNOCHE</ht> propiamente dicho, el de siempre, que escuchamos (casi) todos los viernes; luego <ht>HOY TRASNOCHE DIARIO</ht>, que durante el aislamiento duro de 2020 salía todos los días; y los demás, como ser MATÓ MIL y en los que se habló de otras cosas. Este último grupo fue descartado de todo análisis, sin representar demasiado impacto general ya que son muy pocos episodios. En caso de que se especifique lo contrario, todos los análisis están hechos en base a la información de <ht>HOY TRASNOCHE</ht> tradicional. La cosa sana.
+
+No soy ningún experto en análisis de datos ni en programación. Soy un entusiasta de R, sigo <ht>HOY TRASNOCHE</ht> desde el primer episodio, y nunca me lo pierdo. Hacer todo esto me permitió aprender un montón de programación, manejo de datos, visualización y disfruté un muchísimo todo el proceso.
+
+# Análisis de datos numéricos {#sec-num}
+
+Para esta sección, los datos más relevantes son la duración de los episodios y la fecha de publicación, extraídos del perfil de <ht>HOY TRASNOCHE</ht> de Spotify. Con eso es posible generar boxplots anuales de cuánto duran los episodios (@fig-01), cantidad anual de horas de contenido ([-@fig-02]), porcentaje de publicación los viernes ([-@fig-03]), cantidad promedio de episodios por mes ([-@fig-04]) y serie consecutiva de semanas con/sin episodios ([-@fig-05]).
+
+## Duración de los episodios {#sec-num-dur}
+
+<!-- hacer que las imágenes abarquen más espacio horizontal, más ancho que el texto, hacia la derecha -->
+<!-- https://quarto.org/docs/authoring/article-layout.html#page-column -->
+
+::: {.column-screen-inset-right}
+```{r 2_duracion_episodios}
+#| fig-cap: Boxplot de la duración de los episodios, por año. Se muestra la cantidad de episodios y se indica la mediana anual.
+#| fig-align: center
+
+HT_dur <- HT_trad |> 
+  select(fecha = release_date, duracion = duration_ms) |> 
+  mutate(duracion = duracion/1000/60) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  mutate(año = year(fecha)) |> 
+  mutate(año = factor(año)) |> 
+  group_by(año) |> 
+  mutate(dur_media = median(duracion)) |> 
+  mutate(cantidad = n()) |> 
+  ungroup()
+
+
+
+# aclaraciones
+ac_01 <- tibble(x = c(26, 101), y = c(7, 7.5),
+                label = c("Cantidad de episodios", 
+                          "Mediana (min) de la<br>duración de los<br>episodios"),
+                hjust = c(.5, 0), vjust = c(1, 1))
+
+# flechas
+fl_01 <- tibble(x = c(10, 102, 65), y = c(6.9, 7.4, 7.75), 
+                xend = c(1, 93, 61), yend = c(6.95, 7.4, 7.4))
+
+g_dur <- HT_dur |> 
+  ggplot(aes(x = duracion, y = año)) + 
+  # vertical 60 min
+  geom_vline(xintercept = 60, color = "grey90", linetype = 2, linewidth = 1, 
+             alpha = .5) +
+  # boxplot
+  geom_boxplot(show.legend = FALSE, width = .25, outlier.shape = NA,
+               alpha = 1, color = "#ffc10e", fill = "#ee4121") +
+  # barritas
+  geom_point(show.legend = FALSE, shape = "|", size = 2, alpha = .5, 
+             color = "#ffc10e", position = position_nudge(y = -.25)) +
+  # triángulo mediana
+  geom_point(aes(x = dur_media, y = año), show.legend = FALSE, size = 3, 
+             alpha = .8, shape = "\u25BC", color = "white", 
+             position = position_nudge(y = .19)) +
+  # duración mediana, por año
+  geom_text(aes(label = round(dur_media, 0), x = dur_media), color = "white",
+            nudge_y = .35, nudge_x = 0, size = 3, family = "mono") +
+  # cantidad de episodios
+  geom_text(aes(label = cantidad, x = 0, y = año), color = "grey70",
+            family = "mono", vjust = 1.2, hjust = 1, size = 3) +
+  # aclaraciones
+  geom_richtext(data = ac_01, aes(x, y, label = label, hjust = I(hjust),
+                                  vjust = I(vjust)), 
+                inherit.aes = FALSE, color = "white", size = 3, 
+                fontface = "italic", family = "titillium", fill = NA,
+                label.color = NA) +
+  # flechas
+  geom_curve(data = fl_01[1:2,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = .1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  geom_curve(data = fl_01[3,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = -.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # manual
+  scale_x_continuous(breaks = seq(0, 120, 10),
+                     limits = c(0, 120),
+                     expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_fill_brewer(palette = "Dark2") +
+  # ejes
+  labs(x = "Duración (min)", y = NULL,
+       title = "CADA AÑO HAY MÁS<br><span style = 'color:#ffc10e;'>**HOY TRASNOCHE**</span>",
+       subtitle = "Durante los primeros cuatro años, la mediana de la duración de<br>los episodios
+       no superaba la hora. A partir de <span style = 'color:#ffc10e;'>2021</span> los episodios<br>comenzaron a cruzar la 
+       marca de los <span style = 'color:#ee4121;'>60 minutos</span>.",
+       caption = HT_caption) +
+  coord_cartesian(ylim = c(.5, 7.5), clip = "off") +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        axis.text = element_text(color = "grey90"),
+        axis.text.y = element_text(size = 22, vjust = 0, family = "bebas",
+                                   color = "grey30"),
+        axis.text.x = element_text(family = "mono", size = 10),
+        axis.title.x = element_text(margin = margin(8, 0, 0, 0), size = 15,
+                                    color = "grey90", family = "bebas"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey10", linewidth = .1),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_markdown(size = 27, family = "friz_bold",
+                                      color = "#ee4121"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(15, 0, 0, 0), size = 9),
+        plot.caption.position = "plot",
+        plot.margin = margin(5, 25, 5, 5))
+
+ggsave(plot = g_dur,
+       filename = here("fig/HT_01.png"),
+       width = 13,
+       height = 16.7,
+       units = "cm",
+       dpi = 300)
+
+# texto
+HT_d <- HT_trad |> 
+  select(fecha = release_date, duracion = duration_ms) |> 
+  mutate(duracion = duracion/1000/60) |> 
+  mutate(fecha = ymd(fecha))
+
+ep_2017 <- HT_dur |> 
+  filter(año == 2017) |> 
+  distinct(cantidad) |> 
+  pull()
+
+med_2017 <- HT_dur |> 
+  filter(año == 2017) |> 
+  distinct(dur_media) |> 
+  pull()
+
+med_2023 <- HT_dur |> 
+  filter(año == 2023) |> 
+  distinct(dur_media) |> 
+  pull()
+
+ep_corto <- HT_trad |> 
+  mutate(fecha = release_date, duracion = duration_ms) |> 
+  mutate(duracion = duracion/1000/60) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  filter(duracion == min(duracion))
+
+ep_largo <- HT_trad |> 
+  mutate(fecha = release_date, duracion = duration_ms) |> 
+  mutate(duracion = duracion/1000/60) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  filter(duracion == max(duracion))
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Boxplot de la duración de los episodios, por año. Se muestra la distribuión (líneas verticales amarillas) de episodios, la cantidad y la mediana anual.](fig/HT_01.png){#fig-01 fig-align="center"}
+:::
+
+Las pequeñas líneas verticales amarillas en cada año indican las duraciones individuales de los episodios. La caja del boxplot contiene el 50% de todos los datos, y la línea que lo divide marca la mediana de la distribución de tiempos. La mediana indica el valor central de las duraciones. Por ejemplo, para 2019, la mitad de todos los episodios duró menos de 53 minutos, y la otra mitad duró más de 53 minutos.
+
+La @fig-01 muestra la evolución de la duración de los episodios, año a año. Comenzando en 2017, con solo `r ep_2017` programas y `r round(med_2017)` minutos de extensión, hasta 2023 con casi una hora y media (`r round(med_2023)`), aunque aún con pocas emisiones. Me parece relevante mostrar la marca (vertical a trazos) de los 60 minutos, donde queda claro que durante los primeros cuatro años de <ht>HOY TRASNOCHE</ht> la mediana era sub-1 hora. A partir de 2021 se superó esa marca, desde entonces sigue en aumento.
+
+El capítulo más corto es de `r round(ep_corto$duracion)` minutos, titulado justamente [`r ep_corto$name`](https://open.spotify.com/episode/2BkTi0k3q1JtcBdl9Uua5L), del `r format(ep_corto$fecha, "%d de %B de %Y")`. Con `r floor((ep_largo$duracion)/60)` hora y `r floor(((ep_largo$duracion)/60 - floor((ep_largo$duracion)/60))*60)` minutos, el capítulo más largo es [`r ep_largo$name`](https://open.spotify.com/episode/6ig7lNaKK13LJlrGBbE4No), publicado el `r format(ep_largo$fecha, "%d de %B de %Y")`.
+
+
+## Cantidad de contenido {#sec-num-tot}
+
+::: {.column-screen-inset-right}
+```{r 3_cantidad_contenido}
+# 2.- columnas, duración total anual --------------------------------------
+
+HT_dur_tot <- HT_trad |> 
+  select(fecha = release_date, duracion = duration_ms) |> 
+  mutate(duracion = duracion/1000/60) |> 
+  group_by(año = year(fecha)) |> 
+  summarise(dur_tot = sum(duracion),
+            dur_prom = mean(duracion),
+            cantidad = n()) |> 
+  mutate(dur_tot = dur_tot/60) |> 
+  mutate(dur_hora = (dur_prom - dur_prom %% 60)/60) |> 
+  mutate(dur_min = dur_prom %% 60 |> round(0)) |> 
+  mutate(dur_label = if_else(dur_hora == 0,
+                             glue("**{dur_min}**m"),
+                             glue("**{dur_hora}**h **{dur_min}**m"))) |> 
+  ungroup()
+
+etq_dia <- tibble(x = 2023.5, y = c(24, 48), label = c("1 día", "2 días"))
+
+# aclaración
+ac_02 <- tibble(x = c(2017.2, 2017.6, 2017.5), y = c(40, 30, 8),
+                label = c("Suma total<br>acumulada",
+                          "Duración promedio<br>de cada episodio",
+                          "Cantidad<br>de episodios"),
+                hjust = c(1, 1, 0), vjust = 1)
+
+# flecha
+fl_02 <- tibble(x = c(2017, 2017.55, 2018.1), y = c(37, 29.5, 5.2),
+                xend = c(2017.5, 2017.8, 2017.95), yend = c(36, 31.7, 2.5))
+
+g_tot <- ggplot(data = HT_dur_tot, aes(x = año, y = dur_tot)) +
+  # horizontales 1 día y 2 días
+  geom_hline(yintercept = c(24, 48), color = "grey90", linetype = 2, alpha = .5,
+             linewidth = 1) +
+  # etiqueta 1 día y 2 días
+  geom_text(data = etq_dia, aes(x, y, label = label), inherit.aes = FALSE, 
+            color = "grey90", family = "titillium", nudge_y = 1, hjust = 1,
+            alpha = .5) +
+  # columna
+  geom_col(color = NA, fill = "#ee4121") +
+  # total anual
+  geom_text(aes(label = glue("{round(dur_tot, 0)}h")), color = "#ffc10e", 
+            nudge_y = .5, nudge_x = -.4, size = 10, family = "bebas",
+            vjust = 0, hjust = 0) +
+  # promedio duración de episodio por año
+  geom_richtext(aes(label = dur_label, x = año), color = "black", fill = NA,
+                nudge_y = -2.5, nudge_x = -.4, size = 4, family = "titillium",
+                vjust = 0, 
+                hjust = 0, label.size = NA, label.padding = unit(.1, "line")) +
+  # cantidad de episodios por año
+  geom_richtext(aes(label = glue("{cantidad}"), y = 1), color = "grey90", 
+                fill = NA, nudge_y = 0, nudge_x = -.4, size = 4, 
+                family = "mono", vjust = 0, hjust = 0, label.size = NA, 
+                label.padding = unit(.1, "line")) +
+  # aclaraciones
+  geom_richtext(data = ac_02, aes(x, y, label = label, hjust = I(hjust), 
+                                  vjust = I(vjust)),  inherit.aes = FALSE, 
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = NA, label.color = NA) +
+  # flechas
+  geom_curve(data = fl_02[1:2,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = +.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  geom_curve(data = fl_02[3,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = -.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # flecha título 48 horas
+  geom_curve(x = 2020.4, y = 50, xend = 2021.5, yend = 45, inherit.aes = FALSE,
+             color = "white", arrow.fill = "white", curvature = +.1,
+             linewidth = .3, arrow = arrow(angle = 10, length = unit(.3, "line"),
+                                           type = "closed")) +
+  # manual
+  scale_x_continuous(breaks = seq(2017, 2023, 1), 
+                     limits = c(2016.5, 2023.5),
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 49),
+                     expand = c(0, 0)) +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "EN TODO 2022 <span style = 'color:#ffc10e;'>FLOR</span> 
+       Y <span style = 'color:#ffc10e;'>CALU</span><br>
+       TRABAJARON <span style = 'color:#ffc10e;'>2 DÍAS</span>",
+       subtitle = "Entre <span style = 'color:#ffc10e;'>2018-2021</span>, 
+       la suma de la duración total anual se mantuvo entre<br>las 
+       <span style = 'color:#ee4121;'>30-39</span> horas. En 
+       <span style = 'color:#ffc10e;'>2022</span> alcanzó las 
+       <span style = 'color:#ee4121;'>48 horas</span>.",
+       caption = HT_caption) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(family = "bebas", size = 17, color = "grey30",
+                                   margin = margin(4, 0, 10, 0)),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_markdown(size = 23, family = "friz_bold",
+                                      color = "#ee4121"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(15, 0, 0, 0), size = 9),
+        plot.caption.position = "plot",
+        plot.margin = margin(6, 10, 5, 10))
+
+ggsave(plot = g_tot,
+       filename = here("fig/HT_02.png"),
+       width = 13.4,
+       height = 18,
+       units = "cm",
+       dpi = 300)
+
+# texto
+tot_2022 <- HT_dur_tot |> 
+  filter(año == 2022) |> 
+  pull(dur_tot)
+
+tot_2023 <- HT_dur_tot |> 
+  filter(año == 2023) |> 
+  pull(dur_tot)
+
+ep_2022 <- HT_dur_tot |> 
+  filter(año == 2022) |> 
+  pull(cantidad)
+
+ep_2023 <- HT_dur_tot |> 
+  filter(año == 2023) |> 
+  pull(cantidad)
+
+prom_2022 <- HT_dur_tot |> 
+  filter(año == 2022) |> 
+  mutate(d = glue("{dur_hora}h {dur_min}m")) |> 
+  pull(d)
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Suma total de la duración de los episodios, por año. En la base de cada columna se indica la cantidad de episodios emitidos en el año indicado; y en la parte superior, las duraciones promedio de cada episodio.](fig/HT_02.png){#fig-02 fig-align="center"}
+:::
+
+Las columnas de la @fig-02 representan la suma total de las duraciones de todos los episodios emitidos en ese año. Se muestran en líneas horizontales a trazos las marcas de 24 horas y 48 horas.
+
+El primer año, con poco más de 20 episodios, se alcanzó las 18 horas de contenido. El promedio por episodio fue de 52 minutos. Entre 2018 y 2021 generaron entre 30 y casi 40 horas anuales. El año récord es 2022, con `r round(tot_2022)` horas de contenido, `r ep_2022` episodios en total y `r prom_2022` de duración promedio. Nótese que los valores en negro en la parte superior de las columnas son promedios, no confundir con las medianas (valores en color blanco) de la @fig-01 en los boxplots.
+
+En lo poco que va de 2023, con apenas `r ep_2023` capítulos, ya se alcanzó las `r round(tot_2023)` horas totales.
+
+Se mantiene la tendencia vista en la @fig-01. Con el progresar de los años, hay más y más contenido.
+
+## Publicaciones durante los viernes {#sec-num-vie}
+
+::: {.column-screen-inset-right}
+```{r 4_publicacion_viernes}
+# 3.- columnas, viernes ---------------------------------------------------
+
+HT_viernes <- HT_trad |> 
+  select(fecha = release_date) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  mutate(dia = weekdays(fecha)) |> 
+  group_by(año = year(fecha)) |> 
+  count(dia) |> 
+  mutate(dia = str_to_sentence(dia)) |> 
+  mutate(dia = fct_infreq(dia)) |> 
+  mutate(dia = fct_rev(dia)) |> 
+  mutate(n_prop = n/sum(n)*100) |> 
+  ungroup() |> 
+  filter(dia == "Viernes") |> 
+  mutate(año = factor(año))
+
+HT_jueves <- HT_trad |> 
+  select(fecha = release_date) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  mutate(dia = weekdays(fecha)) |> 
+  group_by(año = year(fecha)) |> 
+  count(dia) |> 
+  mutate(dia = str_to_sentence(dia)) |> 
+  mutate(dia = fct_infreq(dia)) |> 
+  mutate(dia = fct_rev(dia)) |> 
+  mutate(n_prop = n/sum(n)*100) |> 
+  filter(dia != "Viernes") |> 
+  ungroup() |> 
+  slice_max(n, n = 1)
+
+HT_total_año <- HT_trad |> 
+  select(fecha = release_date) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  mutate(dia = weekdays(fecha)) |> 
+  group_by(año = year(fecha)) |> 
+  summarise(tot_ep = n())
+
+HT_prop_vier <- HT_trad |> 
+  select(fecha = release_date) |> 
+  mutate(fecha = ymd(fecha)) |> 
+  mutate(dia = weekdays(fecha)) |> 
+  group_by(año = year(fecha)) |> 
+  count(dia) |> 
+  ungroup() |> 
+  filter(dia == "Viernes") |> 
+  left_join(HT_total_año, by = "año") |> 
+  select(año, tot_vier = n, tot_ep) |> 
+  mutate(año = factor(año)) |> 
+  left_join(HT_viernes, by = "año") |> 
+  select(-dia, -n, vier_prop = n_prop)
+
+# aclaraciones
+ac_03 <- tibble(x = c(85, 40, 40), y = c(7.7, 7.45, 6.85),
+                label = c("Porcentaje de episodios<br>publicados los viernes",
+                          "Episodios publicados<br>los viernes",
+                          "Episodios totales"),
+                hjust = 1, vjust = 1)
+
+# flechas
+fl_03 <- tibble(x = c(41, 41, 86), y = c(7.3, 6.7, 7.3),
+                xend = c(47, 47.2, 92), yend = c(7.2, 6.8, 7.05))
+
+g_viernes <-  ggplot(data = HT_viernes, aes(x = n_prop, y = año)) +
+  # vertical 100%
+  geom_vline(xintercept = 100, color = "grey90", linetype = 2, alpha = .5,
+             linewidth = 1) +
+  # columna
+  geom_col(fill = "#ee4121", color = NA, width = .8) +
+  # porcentajes
+  geom_text(aes(label = glue("{round(n_prop, 0)}%")), color = "black",
+            family = "bebas", size = 9.1, hjust = 1, vjust = 1, nudge_x = 0,
+            nudge_y = -.05, fontface = "bold") +
+  # jueves, 2020
+  geom_richtext(x = 40.5, y = factor(2020), 
+            label = glue("En 2020 el <span style = 'color:#ffc10e;'>{round(HT_jueves$n_prop, 0)}%</span> de los episodios<br>
+                         fueron publicados los <span style = 'color:#ffc10e;'>jueves</span>"), inherit.aes = FALSE, hjust = 0,
+            color = "white", fill = NA, label.color = NA, family = "titillium",
+            vjust = .3) +
+  # propociones viernes por año
+  geom_richtext(data = HT_prop_vier, inherit.aes = FALSE,
+                aes(x = vier_prop/2, y = año, label = glue("{tot_vier}<br>{tot_ep}")),
+                color = "grey80", fill = NA, label.color = NA, family = "mono",
+                fontface = "bold") +
+  # línea horizontal entre proporción
+  geom_richtext(data = HT_prop_vier, inherit.aes = FALSE,
+                aes(x = vier_prop/2, y = año, label = glue("_")), nudge_y = .2,
+                color = "grey80", fill = NA, label.color = NA, family = "mono",
+                size = 10) +
+  # aclaraciones
+  geom_richtext(data = ac_03, aes(x, y, label = label, hjust = I(hjust), 
+                                  vjust = I(vjust)),  inherit.aes = FALSE, 
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = NA, label.color = NA) +
+  # flechas
+  geom_curve(data = fl_03[c(1, 3),], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = -.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  geom_curve(data = fl_03[2,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = +.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # manual
+  scale_x_continuous(limits = c(0, 110),
+                     breaks = 100,
+                     labels = "100%",
+                     expand = c(0, 0)) +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "COMO TODOS LOS <span style = 'color:#ffc10e;'>VIERNES</span>,<br>
+       UN NUEVO EPISODIO DE<br><span style = 'color:#ffc10e;'>HOY TRASNOCHE</span>",
+       subtitle = "Casi todos los episodios se publican los 
+       <span style = 'color:#ee4121;'>viernes</span>, excepto
+       durante <span style = 'color:#ffc10e;'>2020</span>.<br>Desde 
+       <span style = 'color:#ffc10e;'>2022</span> los episodios se publican
+       exclusivamente los <span style = 'color:#ee4121;'>viernes</span>.",
+       caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")) +
+  coord_cartesian(clip = "off", ylim = c(1, 7)) +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        axis.text = element_text(color = "grey90"),
+        axis.text.y = element_text(size = 22, vjust = .5, family = "bebas",
+                                   color = "grey30"),
+        axis.text.x = element_text(family = "mono", size = 10,
+                                   color = alpha("grey90", .3),
+                                   margin = margin(4, 0, 10, 0)),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_markdown(size = 24, family = "friz_bold",
+                                      color = "#ee4121"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(5, 0, 0, 0), size = 9),
+        plot.caption.position = "plot",
+        plot.margin = margin(10, 5, 5, 10))
+
+ggsave(plot = g_viernes,
+       filename = here("fig/HT_03.png"),
+       width = 14,
+       height = 18,
+       units = "cm",
+       dpi = 300)
+
+# texto
+jueves_2020 <- HT_jueves |> 
+  pull(n_prop)
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Las columnas muestran el porcentaje anual de publicación los viernes. Se muestra la cantidad de episodios anuales y cuántos de estos se publicaron un viernes.](fig/HT_03.png){#fig-03 fig-align="center"}
+:::
+
+A diferencia de las secciones previas (@sec-num-dur y [-@sec-num-tot]) donde se analizaron las duraciones de los episodios, en esta sección se confirma que: si es viernes, hay <ht>HOY TRASNOCHE</ht>, digamos. No quiere decir que salga todos los viernes, eso se analiza en la @sec-num-pala. Significa que cada vez que hubo un nuevo episodio, muy probablemente fue viernes.
+
+Con excepción de 2020, todos los años al menos el 90% de los capítulos se publican los viernes. En 2022 y lo que va de 2023, la totalidad de los episodios estuvieron disponibles los viernes. El verdadero TGIF.
+
+Durante 2020, fue el jueves el día más frecuente, con el `r round(jueves_2020)`% de los capítulos disponibles ese día.
+
+## Distribución de episodios por mes {#sec-num-mes}
+
+::: {.column-screen-inset-right}
+```{r 5_frecuencia_mes}
+# 4.- columna/heatmap -----------------------------------------------------
+
+ac_04 <- tibble(x = c(5.1, 2023.5, 2022.8), y = c(11.8, 4, 8),
+                label = c("Promedio de<br>episodios<br>publicados",
+                          "3 meses<br>seguidos sin<br>episodios",
+                          glue("{length(vec_HT_diario)} episodios de<br>Hoy Trasnoche Diario")),
+                hjust = 0, vjust = 1)
+
+fl_04 <- tibble(x = c(4.5, 2023.5, 2023.5), y = c(10.6, 3.5, 7.2),
+                xend = c(3.8, 2021.3, 2020.2), yend = c(10.2, 2, 4))
+
+# datos IZQUIERDA
+HT_mes <- HT_all |> 
+  mutate(fecha = ymd(release_date)) |> 
+  select(fecha, name) |> 
+  mutate(estado = if_else(name %in% vec_HT_diario,
+                          "diario",
+                          "trad")) |> 
+  select(-name) |> 
+  mutate(año = year(fecha),
+         mes = month(fecha)) |> 
+  mutate(episodio = 1) |> 
+  group_by(mes, año, estado) |> 
+  summarise(tot = sum(episodio), .groups = "drop") |> 
+  group_by(mes, estado) |> 
+  summarise(prom = mean(tot), .groups = "drop") |> 
+  arrange(mes) |> 
+  mutate(mes_label = ymd(glue("2020-{mes}-01")) |> format("%b")) |> 
+  mutate(mes_label = str_remove(mes_label, "\\.") |> str_to_sentence()) |> 
+  mutate(mes_label = fct_reorder(mes_label, mes)) |> 
+  filter(estado == "trad") |>
+  mutate(prom_label = round(prom, digits = 2) |> 
+           format(x = _, nsmall = 2) |> 
+           str_replace(string = _, "\\.", ","))
+
+# plot IZQUIERDA
+g_izq <- ggplot(data = HT_mes, aes(x = prom, y = mes_label, fill = estado)) +
+  # verticales 25 y 50
+  geom_segment(data = tibble(x = c(2, 3, 4), xend = c(2, 3, 4),
+                             y = c(.5, .5, .5), yend = c(12.3, 12.3, 12.3)),
+               aes(x , y, xend = xend, yend = yend),
+               inherit.aes = FALSE, color = "grey90", linetype = 2, alpha = .5,
+               linewidth = 1) +
+  # columna
+  geom_col(position = position_stack(), show.legend = FALSE, width = .7) +
+  # promedio mensual
+  geom_text(aes(label = prom_label), position = position_stack(vjust = 0),
+            color = "black", family = "mono",  size = 4, hjust = -.05, vjust = -.2) +
+  # aclaración promedio
+  geom_richtext(data = ac_04[1,], aes(x, y, label = label, hjust = I(hjust), 
+                                  vjust = I(vjust)),  inherit.aes = FALSE, 
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = "black", label.color = NA) +
+  # flecha suma total acumulada
+  geom_curve(data = fl_04[1,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = .1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # manual
+  scale_x_continuous(trans = "reverse",
+                     breaks = c(2, 3, 4),
+                     limits = c(5.1, 0), # orden inverso !!!
+                     expand = c(0, 0)) +
+  scale_y_discrete(position = "right", expand = c(0, 0)) +
+  scale_fill_manual(values = c("#ee4121"),
+                    labels = c("Hoy Trasnoche Diario"),
+                    name = NULL) +
+  coord_cartesian(clip = "off", ylim = c(.5, 12.5)) +
+  # ejes
+  labs(y = NULL, x = NULL) +
+  theme_minimal() +
+  theme(aspect.ratio = 2,
+        axis.text = element_text(color = "grey90"),
+        axis.text.y.right = element_text(size = 22, vjust = .5, family = "bebas",
+                                         color = "grey90", hjust = .5,
+                                         margin = margin(0, 0, 0, 7)),
+        axis.text.x = element_text(family = "mono", size = 13,
+                                   color = alpha("grey90", .5),
+                                   margin = margin(4, 0, 10, 0)),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.margin = margin(5, 0, 5, 0))
+
+# datos DERECHA
+HT_tile2 <- HT_all |> 
+  filter(!name %in% c(vec_HT_matomil, vec_HT_misc)) |> 
+  mutate(fecha = release_date |> ymd()) |> 
+  select(fecha) |> 
+  mutate(mes = month(fecha)) |> 
+  mutate(año = year(fecha)) |> 
+  mutate(episodio = 1) |> 
+  group_by(año, mes) |> 
+  summarise(total = sum(episodio), .groups = "drop") |> 
+  mutate(mes_año = glue("{mes}_{año}"))
+
+HT_falta <- expand(HT_tile2, año, mes) |> 
+  mutate(mes_año = glue("{mes}_{año}"))
+
+mes_año_HT <- HT_all |> 
+  filter(!name %in% c(vec_HT_matomil, vec_HT_misc)) |> 
+  mutate(fecha = release_date |> ymd()) |> 
+  select(fecha) |> 
+  mutate(mes = month(fecha)) |> 
+  mutate(año = year(fecha)) |> 
+  mutate(mes_año = glue("{mes}_{año}")) |> 
+  distinct(mes_año) |> 
+  pull()
+
+HT_tile_negro <- HT_falta |> 
+  filter(!mes_año %in% mes_año_HT) |> 
+  mutate(total = 0)
+
+meses_orden <- c("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep",
+                 "Oct", "Nov", "Dic")
+
+mes_actual <- HT_all |> 
+  mutate(fecha = ymd(release_date)) |> 
+  slice_max(fecha) |> 
+  pull(fecha) |> 
+  month()
+
+HT_tile <- bind_rows(HT_tile2, HT_tile_negro) |> 
+  select(-mes_año) |> 
+  mutate(estado = case_when(total <= 3 & total != 0 ~ "Menos de 4",
+                            total > 3 & total <= 10 ~ "Entre 4 y 6",
+                            total > 10 ~ "Más de 10",
+                            TRUE ~ "Sin episodios")) |>
+  arrange(total) |>
+  mutate(estado = case_when(año == 2017 & mes <= 3 ~ NA,
+                            año == 2023 & mes > mes_actual ~ NA,
+                            TRUE ~ estado)) |> 
+  mutate(estado = fct_inorder(estado)) |> 
+  mutate(fecha_X = ymd(glue("{año}-{mes}-01"))) |> 
+  mutate(mes = format(fecha_X, "%b")) |> 
+  mutate(mes = str_replace(mes, "\\.", "")) |> 
+  mutate(mes = str_to_sentence(mes)) |> 
+  mutate(mes = factor(mes, levels = meses_orden)) |> 
+  filter(!is.na(estado))
+
+# plot DERECHA
+g_der <- ggplot(data = HT_tile, aes(x = año, y = mes, fill = estado)) +
+  # tile
+  geom_tile(color = "black", show.legend = TRUE, linewidth = 2) +
+  # aclaraciones
+  geom_richtext(data = ac_04[2:3,], aes(x, y, label = label, hjust = I(hjust), 
+                                  vjust = I(vjust)),  inherit.aes = FALSE, 
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = NA, label.color = NA) +
+  # flechas
+  geom_curve(data = fl_04[2:3,], aes(x, y, xend = xend, yend = yend), color = "grey70",
+             inherit.aes = FALSE, arrow.fill = "grey70", curvature = -.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # manual
+  scale_x_continuous(breaks = 2017:2023,
+                     labels = paste0("'", 17:23),
+                     expand = c(0, 0)) +
+  scale_fill_manual(values = c("grey30", "#ee4121", "#ffc10e", "white"),
+                    na.value = "black",
+                    name = "Hoy Trasnoche\nDiario +\nHoy Trasnoche") +
+  coord_cartesian(clip = "off") +
+  labs(y = NULL, x = NULL) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  theme_minimal() +
+  theme(aspect.ratio = 2,
+        legend.position = c(1.15, .85),
+        legend.background = element_rect(color = "grey30", fill = NA, linetype = 2,
+                                         linewidth = .2),
+        legend.key.size = unit(1, "line"),
+        legend.text = element_text(color = "white", family = "titillium",
+                                   size = 8),
+        legend.title = element_text(color = "white", family = "titillium",
+                                    size = 9),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(family = "bebas", size = 18,
+                                   color = alpha("grey30", 1),
+                                   margin = margin(4, 0, 10, 0)),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.margin = margin(5, 65, 5, 0))
+
+# PLOT COMPUESTA
+g_comp <- g_izq + g_der &
+  plot_annotation(title = "EN SU MAYORÍA, TENEMOS AL<br>MENOS 
+                  <span style='color:#ffc10e;'>3 EPISODIOS MENSUALES</span>",
+                  subtitle = "En <span style='color:#ffc10e;'>enero</span> y 
+                  <span style='color:#ffc10e;'>febrero</span> se dan los promedios 
+                  más bajos. El máximo ocurre en mayo, con 
+                  <span style='color:#ee4121;'>3,83</span> <br>episodios. En 2020,
+                  entre marzo y mayo, <span style='color:#ffc10e;'>durante el 
+                  aislamiento</span>, se produjeron la mayor<br>cantidad de 
+                  episodios por mes, gracias a <span style='color:#ee4121;'>Hoy 
+                  Trasnoche Diario</span>.",
+                  caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}"),
+                  theme = theme(
+                    plot.background = element_rect(color = "grey30",
+                                                   fill = "black"),
+                    plot.title.position = "plot",
+                    plot.title = element_markdown(size = 23, family = "friz_bold",
+                                                  color = "#ee4121"),
+                    plot.subtitle = element_markdown(color = "white", size = 12,
+                                                     family = "titillium",
+                                                     margin = margin(2, 0, 2, 0)),
+                    plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                                    margin = margin(1, 0, 0, 0), size = 9),
+                    plot.caption.position = "plot"))
+
+ggsave(plot = g_comp,
+       filename = here("fig/HT_04.png"),
+       width = 17,
+       height = 18,
+       units = "cm",
+       dpi = 300)
+
+# texto
+
+promedio_mayo <- HT_mes |> 
+  filter(mes_label == "May") |> 
+  pull(prom_label)
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Las barras horizontales de la izquierda indican la cantidad promedio de episodios por mes indicado. A la derecha se muestra un *heat-map* con la cantidad de episodios por mes y año.](fig/HT_04.png){#fig-04 fig-align="center"}
+:::
+
+Con la fecha de publicación es posible analizar la frecuencia y la suma acumulada de episodios por mes.
+
+A la izquierda de la @fig-04 se muestran la cantidad promedio de episodios publicados por mes. A comienzo de año, entre enero y abril, se alcanzan como máximo a producir 3 episodios mensuales. En mayo se alcanza la máxima producción, de `r promedio_mayo`.
+
+El lado derecho de la figura muestra la cantidad total de episodios publicados en cada mes de cada año. En gris se indica la ausencia total de capítulos. Nótese la secuencia de tres meses seguidos sin episodios a principios de 2021 (más información en la @sec-num-pala). En el primer año de vida de <ht>HOY TRASNOCHE</ht> estuvimos 2 meses sin actividad, entre agosto y septiembre de 2017.
+
+En blanco se señalan los meses con más de 10 episodios, que corresponden a las ediciones de <ht>HOY TRASNOCHE DIARIO</ht>. Durante marzo, abril y mayo de 2020, en el período de aislamiento más estricto, tuvimos `r nrow(HT_diario)` episodios en total. Claramente la mayor densidad de episodios.
+
+Desde abril de 2021 tenemos al menos un episodio todos los meses, sin falta. El último mes entero sin actividad fue marzo de 2021.
+
+## Serie consecutiva de episodios semanales {#sec-num-pala}
+
+::: {.column-screen-inset-right}
+```{r 6_frecuencia_semanal_escalera}
+# 5.- step, pala v palan't ------------------------------------------------
+
+HT_sin_actividad <- HT_trad |> 
+  mutate(fecha1 = release_date |> ymd()) |> 
+  select(fecha1) |> 
+  mutate(fecha2 = lag(fecha1)) |> 
+  mutate(delta_dia = fecha2 - fecha1) |> 
+  arrange(desc(delta_dia)) |> 
+  slice_max(delta_dia, n = 2) |> 
+  mutate(delta_semana = round(as.numeric(delta_dia)/7 - 1, 0)) |> 
+  mutate(fecha1_etq = format(fecha1, "%d %b %y") %>% str_remove(., "\\.")) |> 
+  mutate(fecha2_etq = format(fecha2, "%d %b %y") %>% str_remove(., "\\.")) |> 
+  mutate(fecha1_etq = toupper(fecha1_etq),
+         fecha2_etq = toupper(fecha2_etq))
+
+HT_s1 <- HT_sin_actividad[1, ]
+HT_s2 <- HT_sin_actividad[2, ]
+
+# 15 semanas seguidas SIN episodios, 2020-12-31 al 2021-04-23, 113 días
+# 12 semanas seguidas SIN episodios, 2017-07-14 al 2017-10-13, 91 días
+
+# PALAN'T
+acla_s1 <- glue("<img src='{here('pic/palant.png')}' width='40' /><br>
+                {HT_s1$delta_semana} semanas<br>
+               {HT_s1$fecha1_etq} - {HT_s1$fecha2_etq}")
+acla_s2 <- glue("<img src='{here('pic/palant.png')}' width='40' /><br>
+                {HT_s2$delta_semana} semanas<br>
+               {HT_s2$fecha1_etq} - {HT_s2$fecha2_etq}")
+
+# secuencia agarrando la pala
+HT_semana <- HT_trad |>
+  mutate(fecha = release_date |> ymd()) |>
+  select(fecha) |>
+  arrange(fecha) |>
+  mutate(semana = week(fecha)) |>
+  mutate(episodio = 1)
+
+HT_semana2 <- HT_semana |> 
+  mutate(año = year(fecha)) |> 
+  select(-fecha, -episodio) |> 
+  distinct() |> 
+  mutate(episodio = 1)
+
+ordenado <- tibble(fecha = seq.Date(from = ymd(20170417), ymd(20230217), "1 day")) |>
+  mutate(semana = week(fecha)) |>
+  mutate(año = year(fecha)) |>
+  distinct(semana, año, .keep_all = TRUE) |>
+  select(-fecha) |> 
+  full_join(HT_semana2, by = join_by(año, semana)) |>
+  arrange(año, semana) |> 
+  mutate(episodio = if_else(is.na(episodio),
+                            0,
+                            episodio))
+
+# Run Length Encoding
+# sirve p/contar la cantidad de veces seguidas que se repite un valor
+# en este caso, las semanas con (1) o sin (0) episodio
+# ?rle()
+ordenado_lista <- rle(ordenado$episodio)
+
+# tibble(largo = ordenado_lista[[1]], valor = ordenado_lista[[2]]) |> 
+#   arrange(desc(largo)) |> 
+#   filter(valor == 1) |> 
+#   head(2)
+
+# 20 semanas seguidas CON episodios, semana 17-36, 2021
+# 13 semanas seguidas CON episodios, semana 12-24, 2020
+
+HT_con_actividad <- HT_semana |> 
+  mutate(semana = week(fecha)) |> 
+  mutate(año = year(fecha)) |> 
+  select(-episodio) |> 
+  mutate(sem_año = glue("{semana}_{año}")) |> 
+  filter(sem_año %in% c("17_2021", "36_2021", "12_2020", "24_2020")) |> 
+  select(-sem_año) |> 
+  mutate(fecha_date = fecha) |> 
+  mutate(fecha = format(fecha, "%d %b %y") %>% str_remove(., "\\.")) |> 
+  mutate(fecha = toupper(fecha))
+
+HT_c1 <- HT_con_actividad[3:4, ]
+HT_c2 <- HT_con_actividad[1:2, ]
+
+# PALA
+acla_c1 <- glue("<img src='{here('pic/pala.png')}' width='40' /><br>
+                {diff(HT_c1$semana)+1} semanas<br>
+               {HT_c1$fecha[1]} - {HT_c1$fecha[2]}")
+acla_c2 <- glue("<img src='{here('pic/pala.png')}' width='40' /><br>
+                {diff(HT_c2$semana)+1} semanas<br>
+               {HT_c2$fecha[1]} - {HT_c2$fecha[2]}")
+
+HT_escalera <- HT_trad |> 
+  mutate(fecha = release_date |> ymd()) |> 
+  select(fecha) |> 
+  mutate(episodio = 1) |> 
+  arrange(fecha) |> 
+  mutate(total = cumsum(episodio))
+
+cor1 <- HT_escalera |> 
+  filter(fecha %in% HT_sin_actividad$fecha1 | fecha %in% HT_sin_actividad$fecha2) |> 
+  select(fecha, total) |> 
+  mutate(total = c(10, 10, 135, 135))
+
+vert_sin_act <- tibble(x = cor1$fecha,
+                       xend = cor1$fecha,
+                       y = cor1$total - 5,
+                       yend = cor1$total + 5)
+
+cor2 <- HT_escalera |> 
+  filter(fecha %in% HT_con_actividad$fecha_date) |> 
+  select(-episodio)
+
+vert_con_act <- tibble(x = cor2$fecha,
+                       xend = cor2$fecha,
+                       y = cor2$total - 5,
+                       yend = cor2$total + 5)
+
+vec_fecha_break <- ymd(paste0(2017:2023, "0701"))
+
+ultimo <- HT_escalera |>
+  slice(nrow(HT_escalera)) |> 
+  mutate(fecha = format(fecha, "%d %b %y") %>% str_remove(., "\\.")) |> 
+  mutate(fecha = toupper(fecha))
+
+primero <- HT_escalera |>
+  slice(1) |> 
+  mutate(fecha = format(fecha, "%d %b %y") %>% str_remove(., "\\.")) |> 
+  mutate(fecha = toupper(fecha))
+
+# aclaraciones
+ac_05 <- tibble(x = ymd(20201001, 20190101, 20220101, 20181201, 20160701, 20230201),
+                y = c(200, 155, 140, 42, 40, 200),
+                label = c(acla_c1, acla_c2, acla_s1, acla_s2,
+                          glue("1<sup>er</sup> episodio<br>{primero$fecha}"),
+                          glue("{ultimo$total} episodios<br>hasta el<br>{ultimo$fecha}")),
+                hjust = c(.5, .5, .5, .5, 0, 0),
+                vjust = 1)
+
+# flechas
+fl_05 <- tibble(x = ymd(20210701, 20180301, 20201001, 20190701, 20230701, 20161101), 
+                y = c(115, 7, 160, 115, 202, 26),
+                xend = ymd(20210301, 20170815, 20210701, 20200401, max(HT_d$fecha) + days(7), 20170401), 
+                yend = c(132, 9, 148, 107, nrow(HT_d), 3))
+
+g_escalera <- ggplot(data = HT_escalera, aes(x = fecha, y = total)) +
+  # escalera
+  geom_step(color = "#ee4121", linewidth = .5) +
+  # aclaraciones
+  geom_richtext(data = ac_05[1:4,], aes(x, y, label = label, hjust = I(hjust),
+                                        vjust = I(vjust)),  inherit.aes = FALSE,
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = NA, label.color = NA) +
+  geom_richtext(x = ac_05$x[5], y = ac_05$y[5], label = ac_05$label[5],
+                hjust = ac_05$hjust[5], vjust = ac_05$vjust[5],  inherit.aes = FALSE,
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = NA, label.color = NA) +
+  geom_richtext(x = ac_05$x[6], y = ac_05$y[6], label = ac_05$label[6],
+                hjust = ac_05$hjust[6], vjust = ac_05$vjust[6],  inherit.aes = FALSE,
+                color = "white", size = 3, fontface = "italic",
+                family = "titillium", fill = NA, label.color = NA) +
+  # flechas
+  geom_curve(data = fl_05[1:2,], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = -.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  geom_curve(data = fl_05[3:5, ], aes(x, y, xend = xend, yend = yend), color = "white",
+             inherit.aes = FALSE, arrow.fill = "white", curvature = +.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  geom_curve(x = fl_05$x[6], y = fl_05$y[6], xend = fl_05$xend[6], 
+             yend = fl_05$yend[6], color = "white", inherit.aes = FALSE, 
+             arrow.fill = "white", curvature = +.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # aclaración eje
+  geom_richtext(x = ymd(20160901), y = 209, label = "Suma total<br>acumulada<br>de episodios", 
+                inherit.aes = FALSE, family = "titillium", color = "grey40", 
+                size = 3, fill = NA, label.color = NA, hjust = 0, vjust = 1) +
+  # ejes
+  scale_x_date(breaks = vec_fecha_break,
+               date_labels = "%Y", 
+               limits = ymd(20170101, 20231231)) +
+  scale_y_continuous(limits = c(0, 215),
+                     expand = c(0, 0)) +
+  labs(x = NULL, y = NULL,
+       title = "PALA <span style='color:#ee4121;'>V</span> PALAN'T",
+       subtitle = glue(
+         "Durante las primeras <span style='color:#ee4121;'>{HT_s1$delta_semana} 
+         semanas</span> de 2021 no hubo episodios de 
+         <span style='color:#ffc10e;'>Hoy Trasnoche</span>,<br>el período 
+         consecutivo más extenso <span style='color:#ee4121;'>sin actividad</span>. 
+         Depués, la <span style='color:#ffc10e;'>redención</span>, con<br>
+         <span style='color:#ee4121;'>{diff(HT_c1$semana)+1} semanas</span> 
+         ininterrumpidas de episodios, record actual de agarrar la pala."),
+       caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        # axis.text = element_text(color = "grey30"),
+        axis.text.y = element_text(family = "mono", color = "grey90",
+                                   size = 14),
+        axis.text.x = element_text(family = "bebas", size = 18,
+                                   color = alpha("grey30", 1),
+                                   margin = margin(4, 0, 10, 0)),
+        panel.grid.major.y = element_line(color = "grey30", linewidth = .1),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.minor.x = element_line(color = "grey30", 
+                                          linewidth = c(0, .1, .1, .1, .1, .1, .1)),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_markdown(size = 40, family = "friz_bold",
+                                            color = "#ffc10e"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(1, 0, 0, 0), size = 9),
+        plot.caption.position = "plot",
+        plot.margin = margin(5, 5, 5, 5))
+
+ggsave(plot = g_escalera,
+       filename = here("fig/HT_05.png"),
+       width = 15.3,
+       height = 19,
+       units = "cm",
+       dpi = 300)
+
+# texto
+
+record_con <- tibble(largo = ordenado_lista[[1]], valor = ordenado_lista[[2]]) |>
+  arrange(desc(largo)) |>
+  filter(valor == 1) |>
+  head(2) |> 
+  pull(largo)
+
+fecha_ultimo_ep <- HT_trad |> 
+  mutate(fecha = ymd(release_date)) |> 
+  slice_max(fecha, n = 1) |> 
+  pull(fecha) |> 
+  format(x = _, "%d de %B de %Y")
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Los períodos de actividad ininterrumpida se indican como diagonales ascendentes. Las semanas en las que no hay episodios se visualizan como horizontales.](fig/HT_05.png){#fig-05 fig-align="center"}
+:::
+
+Como ninguno de los oyentes pone un mango por <ht>HOY TRASNOCHE</ht>, no podemos pedirles a los conductores que devuelvan la guita cuando no agarran la pala.
+
+Pero si podemos analizar en qué períodos fueron más consistentes y en cuales nos abandonaros.
+
+La @fig-05 muestra un gráfico de escalera. Avanza en dirección horizontal cuando no hay capítulo, y se mueve en vertical cuando hay episodio. Por lo tanto, largos períodos sin capítulos se muestran como rectas horizontales largas; y los períodos de mayor actividad y consistencia, con episodios todas las semanas, se ven como un serrucho diagonal.
+
+Entre el 31 de diciembre de 2020 y el 23 de abril de 2021, en esas 15 semanas, no se publicó nada. La secuencia más extensa sin episodios. El segundo período más largo sin actividad fue 12 semanas en 2017. Ambos períodos son coincidentes con los cuadros grises de la @fig-04.
+
+<span style='background-color:#333333'>Antes de que me vengan a reclamar, sí, salieron dos episodios, pero de Mató Mil (el [trailer](https://open.spotify.com/episode/6pvVC3qbBz7vt8zXp5Mhnq) del podcast y en el que se habla del [Asesino del Zodíaco](https://open.spotify.com/episode/2HbceZfm0kUKMnD4nM0Ksd)). Y como se mencionó en el @sec-intro, este tipo de contenido NO se considera.</span>
+
+Luego de ese inicio complicado de 2021, vinieron `r record_con[1]` semanas ininterrumpidas de contenido. Agarrar la pala intensifies. La redención. En 2020 hubo un comportamiento similar, algo más corto, de `r record_con[2]` semanas seguidas.
+
+A la derecha de la figura se muestra la cantidad total de episodios producidos, `r nrow(HT_trad)`, hasta el `r fecha_ultimo_ep`. Me gustaría decir que son sólo 98, pero las matemáticas no me dejan.
+
+# Análisis de texto {#sec-tex}
+
+<!-- https://quarto.org/docs/authoring/markdown-basics.html#text-formatting -->
+
+Todas las palabras analizadas en esta sección provienen de los textos presentes en los títulos y descripciones de los episodios, según lo encontrado en Spotify. El primer análisis es la verificación de que los conductores son <ins>Flor</ins> y <ins>Calu</ins>, ninguna Florencia o Santiago (@fig-06); dos nubes de palabras, de acuerdo con el contenido en del título y descripción ([-@fig-07]); los pares de palabras que más veces aparecen acompañadas ([-@fig-08]); y las palabras más importantes agrupadas por año ([-@fig-09]).
+
+Tengo experiencia en manipular tablas y datos numéricos, pero tratar con texto fue algo completamente nuevo. Mucho de lo que se describe a continuación se llevó a cabo con el paquete [<code>{tidytext}</code>](https://juliasilge.github.io/tidytext/). Los gráficos e interpretación de los resultados siguieron muy de cerca los ejemplos encontrados en [Text Mining with R](https://www.tidytextmining.com/index.html).
+
+
+## Flor y Calu. Calu y Flor {#sec-tex-nom}
+
+::: {.column-screen-inset-right}
+```{r 7_nombres_flor_calu}
+# 6.- nombres -------------------------------------------------------------
+library(wordcloud)
+library(tidytext)
+library(ggwordcloud)
+library(widyr)
+library(ggraph)
+library(igraph)
+
+f_calu <- glue("<img src='{here('pic/f_calu.png')}' width='60' />")
+f_flor <- glue("<img src='{here('pic/f_flor.png')}' width='60' />")
+
+HT_nombres <- HT_all %>% 
+  # remuevo los episodios de HTD, Mató Mil, entre otros
+  filter(!name %in% vec_HT_otros) |> 
+  mutate(año = year(ymd(release_date))) |> 
+  # conservo 'id' y 'name'
+  select(description, año) |> 
+  # separo p/palabra
+  unnest_tokens(word, description) %>% 
+  # variaciones de los nombres
+  filter(word %in% c("flor", "florencia", "fiorella", "santiago", "calo", "calu")) |> 
+  # cuento
+  count(word) |> 
+  # agrupo por conductor
+  mutate(tipo = if_else(word %in% c("flor", "fiorella"), "FLOR", "CALU")) |> 
+  group_by(tipo) |> 
+  # porcentaje
+  mutate(porc = n/sum(n)*100) |> 
+  ungroup() |> 
+  # agrego columna vacía en "FLOR" para igualar 3 columnas por conductos
+  bind_rows(tibble(word = NA_character_, n = NA_real_, tipo = "FLOR", 
+                   porc = NA_real_)) |> 
+  # nombre y porcentaje
+  mutate(word = glue("{word}<span style='font-size:15px; color:grey40; font-family:mono'>{round(porc)}%</span>")) |> 
+  # ordeno las palabras
+  mutate(word = fct_reorder(word, porc, .na_rm = FALSE)) |> 
+  # agrego las imágenes de los conductores y ordeno
+  mutate(tipo = if_else(tipo == "FLOR", f_flor, f_calu)) |> 
+  mutate(tipo = factor(tipo, levels = c(f_calu, f_flor)))
+
+po_flor <- HT_nombres |> 
+  filter(str_detect(word, "flor")) |> 
+  pull(porc) |> 
+  round()
+
+po_calu <- HT_nombres |> 
+  filter(str_detect(word, "calu")) |> 
+  pull(porc) |> 
+  round()
+
+g_nombres <- ggplot(data = HT_nombres,
+                    aes(x = porc, y = tipo, fill = word)) +
+  # columna (fina)
+  geom_col(position = position_dodge(width = .3, preserve = "total"), 
+           show.legend = FALSE,
+           width = .2, color = "yellow") +
+  # nombre y porcentaje
+  geom_richtext(aes(label = word, group = word, x = porc + 1), family = "bebas",
+                show.legend = FALSE, fill = NA, vjust = .62, size = 10,
+                color = "white", label.color = NA, hjust = 0,
+                position = position_dodge(width = .3))+
+  # manual
+  scale_fill_manual(values = rep("red", 6)) +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "LAS COSAS POR<br>SU <span style='color:#ee4121;'>NOMBRE</span>",
+       subtitle = glue(
+         "A partir de la descripción de los episodios, el 
+         <span style='color:#ee4121;'>{po_flor}%</span> de las
+         veces Fiorella Sargenti<br>es llamada <span style='color:#ffc10e;'>Flor</span>. 
+         Por su parte, Santiago Calori, el <span style='color:#ee4121;'>{po_calu}%</span> 
+         de las veces es <span style='color:#ffc10e;'>Calu</span>."),
+       caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        panel.border = element_rect(color = NA, fill = NA),
+        panel.spacing.y = unit(1.5, "line"),
+        axis.text = element_blank(),
+        axis.text.y = element_markdown(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_markdown(size = 40, family = "friz_bold",
+                                      color = "#ffc10e"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium", 
+                                        size = 9,
+                                        margin = margin(40, 0, 0, 55)),
+        plot.caption.position = "plot",
+        plot.margin = margin(5, 60, 5, 5))
+
+ggsave(plot = g_nombres,
+       filename = here("fig/HT_06.png"),
+       width = 15,
+       height = 17,
+       units = "cm",
+       dpi = 300)
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Diagrama de barras con los porcentajes de los términos más frecuentes para mencionar a los conductores, Fiorella Sargenti y Santiago Calori.](fig/HT_06.png){#fig-06 fig-align="center"}
+:::
+
+Comienzo el análisis de palabras individuales comparando los nombres usados para denominar a los conductores encontrados en las descripciones. Se omitieron los apellidos. En el caso de Fiorella Sargenti, se buscaron las siguientes palabras: <code>Fiorella</code>, <code>Fio</code>, <code>Florencia</code> y <code>Flor</code>. De acuerdo con la @fig-06, en ninguna oportunidad se utiliza los términos <code>Fio</code> o <code>Florencia</code> para referirse a Sargenti. En el caso de Santiago Calori, se buscaron las palabras <code>Calo</code>, <code>Calu</code> y <code>Santiago</code>.
+
+Sargenti es claramente Flor, sin lugar a duda. Siempre lo supimos, no es nada nuevo, pero que la estadística esté de acuerdo es satisfactorio. Personalmente, siempre pensé en Calori como Cal<ins>o</ins>, pero no, es Cal<ins>u</ins>.
+
+Las fotos de las caras de Flor y Calu las saqué de [este](https://www.instagram.com/p/BSzcCh5Bwyi/) post en Instagram, la primera imagen oficial del podcast. Éramos tan jóvenes.
+
+## Nubes de palabras {#sec-tex-nube}
+
+::: {.column-screen-inset-right}
+```{r 8_nube_de_palabras}
+# 7.- nube de palabras ----------------------------------------------------
+
+# palabras comunes: en español, inglés (por el título de muchas películas) y
+# propio (personalizado)
+
+palabras_comunes <- c(tm::stopwords("es"),
+                      tm::stopwords("en"),
+                      as.character(1:20),
+                      as.character(2017:2023),
+                      # remuevo los nombres de los conductores y palabras comunes
+                      "hoy", "trasnoche", "florencia", "flor", "santiago",
+                      "calori", "calu", "sargenti", "fiorella", "si", "sé", 
+                      "vos", "puede", "bien", "acá", "vol", "va", "cómo", "vez",
+                      "podcast", "episodio", "función", "ver", "vas", "además",
+                      "dos", "hace", "hizo", "l", "ron", "euq", "ne", "dejó")
+
+# título
+HT_titulo <- HT_all %>% 
+  # remuevo los episodios de HTD, Mató Mil, entre otros
+  filter(!name %in% vec_HT_otros) |> 
+  # conservo 'id' y 'name'
+  select(name, id) |> 
+  # separo p/palabra
+  unnest_tokens(word, name) %>% 
+  # remuevo palabras comunes (y, de, la, lo, has, etc)
+  anti_join(tibble(word = palabras_comunes), by = join_by(word))
+
+# top de palabras más frecuentes
+n_top_tit <- 37
+
+# tibble con las 'n_top_tit' palabras más frecuentes
+HT_top_tit <- HT_titulo |> 
+  count(word, sort = TRUE) |> 
+  slice_max(n, n = n_top_tit, with_ties = FALSE) 
+
+# agrego colores
+set.seed(2017); HT_nube_titulo <- HT_top_tit |> 
+  mutate(color = rep(c("#ffc10e", "#ee4121"), length.out = nrow(HT_top_tit)) |> 
+           sample()) 
+
+g_nube_tit <- ggplot(data = HT_nube_titulo) + 
+  # palabras
+  geom_text_wordcloud_area(aes(label = word, size = n, color = I(color)),
+                           seed = 2023) +
+  scale_size_area(max_size = 14) +
+  coord_cartesian(clip = "off") +
+  labs(title = "Título",
+       subtitle = glue("{nrow(HT_top_tit)} palabras más frecuentes")) +
+  theme_void() +
+  theme(aspect.ratio = 1.25,
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.title = element_markdown(size = 20, family = "bebas",
+                                      color = "grey", hjust = .5),
+        plot.title.position = "panel",
+        plot.subtitle = element_markdown(color = "grey40", size = 10,
+                                         family = "titillium", hjust = .5),
+        plot.margin = margin(5, 5, 5, 5))
+
+# descripción
+HT_descr <- HT_all %>% 
+  # remuevo los episodios de HTD, Mató Mil, entre otros
+  filter(!name %in% vec_HT_otros) |> 
+  # conservo 'id' y 'name'
+  select(description, id) |> 
+  # separo p/palabra
+  unnest_tokens(word, description) %>% 
+  # remuevo palabras comunes (y, de, la, lo, has, etc)
+  anti_join(tibble(word = palabras_comunes), by = join_by(word))
+
+# top de palabras más frecuentes
+n_top_desc <- 40
+
+# tibble con las 'n_top' palabras más frecuentes
+HT_top_desc <- HT_descr |> 
+  count(word, sort = TRUE) |> 
+  slice_max(n, n = n_top_desc, with_ties = FALSE) 
+
+# agrego colores
+set.seed(2019); HT_nube_desc <- HT_top_desc |> 
+  mutate(color = rep(c("#ffc10e", "#ee4121"), length.out = nrow(HT_top_desc)) |> 
+           sample()) 
+
+oti <- glue("<img src='{here('pic/oti.png')}' width='20' />")
+
+g_nube_desc <- ggplot(data = HT_nube_desc) + 
+  # oti
+  geom_richtext(x = Inf, y = -Inf, label = oti, inherit.aes = FALSE,
+                fill = NA, label.color = NA, label.r = unit(.7, "line"),
+                label.padding = unit(.1, "line")) +
+  # nube de palabras
+  geom_text_wordcloud_area(aes(label = word, size = n, color = I(color)),
+                           seed = 2023) +
+  scale_size_area(max_size = 22) +
+  coord_cartesian(clip = "off") +
+  labs(title = "Descripción",
+       subtitle = glue("{nrow(HT_nube_desc)} palabras más frecuentes")) +
+  theme_void() +
+  theme(aspect.ratio = 1.25,
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.title = element_markdown(size = 20, family = "bebas",
+                                      color = "grey", hjust = .5),
+        plot.title.position = "panel",
+        plot.subtitle = element_markdown(color = "grey40", size = 10,
+                                         family = "titillium", hjust = .5),
+        plot.margin = margin(5, 5, 5, 5))
+
+# PLOT COMPUESTA
+set.seed(99); g_nube_comp <- g_nube_tit + g_nube_desc &
+  plot_annotation(
+    title = "¿DE QUÉ SE HABLA EN<br><span style='color:#ffc10e;'>HOY TRASNOCHE</span>?",
+    subtitle = "Básicamente, de <span style='color:#ffc10e;'>cine</span> y 
+    <span style='color:#ffc10e;'>porongas</span>. A partir del contenido en el 
+    título y en la descripción se<br>hicieron dos <span style='color:#ee4121;'>nubes 
+    de palabras</span>, que muestran cuáles son las palabras más recurrentes.",
+    caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}"),
+    theme = theme(
+      plot.background = element_rect(color = "grey30",
+                                     fill = "black"),
+      plot.title.position = "plot",
+      plot.title = element_markdown(size = 35, family = "friz_bold",
+                                    color = "#ee4121", align_widths = TRUE,
+                                    margin = margin(2, 2, 2, 10)),
+      plot.subtitle = element_markdown(color = "white", size = 12,
+                                       family = "titillium",
+                                       margin = margin(2, 2, 2, 10)),
+      plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                      margin = margin(1, 0, 0, 0), size = 9),
+      plot.caption.position = "plot",
+      plot.margin = margin(8, 17, 2, 0)))
+
+ggsave(plot = g_nube_comp,
+       filename = here("fig/HT_07.png"),
+       width = 17,
+       height = 15,
+       units = "cm",
+       dpi = 300)
+```
+:::
+
+::: {.column-screen-inset-right}
+![Nubes de palabras, generadas a partir de dos conjuntos de datos: los títulos y las descripciones.](fig/HT_07.png){#fig-07 fig-align="center"}
+:::
+
+Las nubes de palabras son una manera muy visual de tener una idea de qué términos son más frecuentes en documentos, libros, o en este caso, los títulos y descripciones de los episodios de <ht>HOY TRASNOCHE</ht>.
+
+Se contaron todas las palabras presentes en ambos grupos de datos, y se ordenaron de mayor a menor. Para el título se tomaron las 37 palabras más frecuentes. En el primer puesto, para felicidad de todo el pueblo trasnochiter, está <code>poronga</code>, con 8 repeticiones, seguido de <code>película</code> (6) y <code>caca</code> (5). Todas las palabras de la nube tienen al menos 2 repeticiones en los títulos.
+
+Respecto de la nube de palabras de la descripción (lado derecho de la @fig-07), dado que hay una mayor cantidad de palabras, las repeticiones son mayores. En el primer puesto tenemos, con 235 apariciones, el término <code>cine</code>. Para todos los que se preguntaban si HOY TRASNCOCHE es un podcast de cine. Luego siguen <code>semana</code> (187) y <code>películas</code> (100). Todas las palabras tienen al menos 17 apariciones entre todas las descripciones.
+
+Vemos términos históricos como <code>videoclub</code> (96) y <code>portarretratos</code> (95), y términos más recientes como <code>Oti</code> (25).
+
+Todas las cosas que amamos de <ht>HOY TRASNOCHE</ht> están resumidas en estas dos nubes de palabras. El amor por el cine, los caprichos de Flor, los <ht>HOY PORONGA</ht>, caca, falopa, coyuntura. Todo lo que quieren las guachas.
+
+## Temas importantes {#sec-tex-imp}
+
+::: {.column-screen-inset-right}
+```{r 9_importancia_tf_idf}
+# 8.- tf-idf --------------------------------------------------------------
+# browseURL("https://www.tidytextmining.com/tfidf.html#the-bind_tf_idf-function")
+
+pro <- tibble(x = c(1, 6), y = c(4, 2)) |> 
+  lm(y ~ x, data = _) |> coef()
+
+HT_importancia <- HT_all |> 
+  # remuevo los episodios de HTD, Mató Mil, entre otros
+  filter(!name %in% vec_HT_otros) |> 
+  # conservo 'id' y 'name'
+  select(description, release_date) |> 
+  # separo p/palabra
+  unnest_tokens(word, description) |> 
+  # remuevo palabras comunes (y, de, la, lo, has, etc)
+  anti_join(tibble(word = palabras_comunes), by = join_by(word)) |> 
+  mutate(año = year(ymd(release_date))) |> 
+  select(-release_date) |> 
+  group_by(año) |> 
+  count(word) |> 
+  # importancia de c/palabra, comparando entre años
+  bind_tf_idf(word, año, n) |> 
+  arrange(desc(tf_idf)) |> 
+  # tf != 1, IMPORTANTE
+  filter(!near(tf, 1)) |> 
+  # elijo las 1ras 6 palabras
+  slice_head(n = 6) |> 
+  # print(n=100)
+  ungroup() |> 
+  # label
+  mutate(word2 = str_to_sentence(word)) |> 
+  # paso 'word' a factor, ordenado por 'n', dentro de c/año
+  mutate(word = reorder_within(x = word, by = tf_idf, within = año)) |> 
+  # paso a oración
+  mutate(word = str_to_sentence(word)) |> 
+  mutate(word = fct_reorder(word, tf_idf)) |> 
+  # puesto
+  mutate(puesto = rep(1:6, 7) |> as.character()) |> 
+  # tamaño puesto
+  mutate(puesto_tam = pro[1] + pro[2]*as.numeric(puesto)) |> 
+  # alpha puesto
+  mutate(puesto_alpha = 1.14 -.14*as.numeric(puesto))
+
+la <- HT_importancia |> 
+  filter(año >= 2021) |> 
+  group_by(año) |> 
+  filter(row_number() == 1) |> 
+  ungroup() |> 
+  mutate(pic = c("n_la.png", "oti.png", "oti.png")) |> 
+  mutate(ancho = c(20, 35, 35)) |> 
+  mutate(etq = glue("<img src='{here('pic')}/{pic}' width='{ancho}' />"))
+
+g_tfidf <- ggplot(data = HT_importancia, 
+                  aes(x = 0, y = word, label = word2)) +
+  # listado de palabras
+  geom_text(show.legend = FALSE, hjust = 0, color = "white", nudge_x = .015,
+            family = "titillium", size = 4, vjust = 0) +
+  # puesto
+  geom_text(aes(label = puesto, x = 0, y = as.numeric(puesto) |> rev(), 
+                alpha = I(puesto_alpha)), 
+            inherit.aes = FALSE, family = "mono", color = "#ffc10e", 
+            size = 3,
+            hjust = 1, vjust = 0, nudge_y = 0, fontface = "bold") +
+  # Laffie
+  geom_richtext(data = la, aes(x = .7, y  = word, label = etq),
+                fill = NA, label.color = NA, vjust = .2) +
+  facet_wrap(~ año, scales = "free", ncol = 4) +
+  # manual
+  scale_x_continuous(limits = c(0, 1)) +
+  scale_y_reordered() +
+  # eje
+  labs(x = NULL, y = NULL,
+       title = "LO MÁS <span style='color:#ee4121;'>IMPORTANTE</span>, AÑO A AÑO",
+       subtitle = "Se muestran las <span style='color:#ffc10e;'>seis palabras</span> más relevantes, en 
+       orden descendente de <span style='color:#ee4121;'>importancia</span><sup style='color:#ffc10e; font-size:15px'>**†**</sup>.<br> 
+       Las palabras provienen de la <span style='color:#ffc10e;'>descripción</span> de los episodios, agrupadas por 
+       año.",
+       tag = "<sup style='color:#ffc10e; font-size:15px'>**†**</sup>La importancia 
+       de<br>cada palabras se<br>obtuvo mediante el<br>índice 
+       <span style='color:grey70;'>**tf-idf**</span>, frecuencia<br> de 
+       término-frecuencia<br>inversa de documento.",
+       caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")) +
+  coord_cartesian(clip = "off") +
+  theme_minimal() +
+  theme(aspect.ratio = 1,
+        panel.border = element_rect(color = NA, fill = NA),
+        panel.spacing.y = unit(1.5, "line"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        strip.text = element_text(color = "#ee4121", family = "bebas", 
+                                  size = 30, hjust = 0),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_textbox_simple(size = 35, family = "friz_bold",
+                                            color = "#ffc10e"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 20, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(25, 0, 0, 0), size = 9),
+        plot.caption.position = "plot",
+        plot.margin = margin(11, 5, 11, 5),
+        plot.tag = element_markdown(color = "grey45", size = 10, family = "titillium",
+                                hjust = 0),
+        plot.tag.position = c(.75, .13))
+
+ggsave(plot = g_tfidf,
+       filename = here("fig/HT_08.png"),
+       width = 16,
+       height = 17,
+       units = "cm",
+       dpi = 300)
+```
+:::
+
+::: {.column-screen-inset-right}
+![Top 6 de palabras más relevantes, en orden descendente, agrupadas por año.](fig/HT_08.png){#fig-08 fig-align="center"}
+:::
+
+La frecuencia de palabras individuales en un buen parámetro para analizar la relevancia de los términos en una obra completa, como ser el conjunto total de títulos, o descripciones. Útil para generar una nube de palabras (@fig-07). Sin embargo, al considerar diferentes grupos, como ser las descripciones agrupadas por año, no es suficiente para entender cuáles palabras son las más destacadas.
+
+El mecanismo para obtener la importancia de las palabras es <ins>Term frequency – Inverse document frequency</ins> (tf-idf, frecuencia de término – frecuencia inversa de documento). Las palabras más frecuentes a lo largo de todas las descripciones, de todos los años, dan una idea de su relevancia (tf), y deben ser consideradas. Sin embargo, algunas palabras pueden repetirse constantemente durante todos los años, por lo que no son útiles para identificar específicamente las palabras relevantes de un año particular. Es conveniente disminuir su impacto (idf).
+El tf-idf permite cuantificar la importancia de las palabras considerando los efectos de repetición y compensar su relevancia al comparar diferentes grupos. Así es posible encontrar, para cada año, cuáles son las palabras más importantes, aquellas que definieron el año.
+
+La @fig-08 muestra listas de seis palabras, ordenadas de mayor a menor importancia, por año. Podemos ver como la cuenta de Instagram, [<code>@filmejuntoalpueblo</code>](https://www.instagram.com/filmejuntoalpueblo/), estuvo muy presente en el primer año. Aparecen auspiciantes en 2018 y 2020. Secciones viejas conocidas de <ht>HOY TRASNOCHE</ht>, como el <code>portarretratos</code> y el <code>videoclub</code>, también presentes en la nube de palabras. 2021 fue el año donde todos aprendimos (y casi nos convertimos) a la religión creada por Lafayette Ronald <code>Hubbard</code>, el querido <code>Laffie</code>. Nuestra mascota preferida <code>Oti</code> tiene su aparición estelar en 2022, y en lo que vamos de 2023 vemos la presencia del <code>Chico</code> de <code>Redes</code>.
+
+## Pares de palabras {#sec-tex-big}
+
+::: {.column-screen-inset-right}
+```{r 10_bigrama}
+pc <- c(stop_words$word, tm::stopwords("es"))
+vec_flor <- c("fiorella", "sargenti", "flor", "florencia")
+vec_calo <- c("santiago", "calori", "calo", "calu")
+
+# CONTEO
+HT_bigram <- HT_all |> 
+  select(description) |> 
+  unnest_tokens(bigram, description, token = "ngrams", n = 2) |> 
+  separate(bigram, c("word1", "word2"), sep = " ") |> 
+  filter(!word1 %in% pc,
+         !word2 %in% pc) |> 
+  count(word1, word2, sort = TRUE) |> 
+  # saco los números
+  filter(n > 4,
+         !str_detect(word1, "\\d"),
+         !str_detect(word2, "\\d")) |> 
+  mutate(across(-n, str_to_sentence)) |> 
+  # remuevo palabras que se repiten en ambas columnas (word1 == word2)
+  mutate(n = if_else(word1 == word2, NA_real_, n)) |> # print(n = 100)
+  drop_na(n) |> 
+  # HBO
+  mutate(word1 = case_match(word1,
+                            "Hbo" ~ "HBO",
+                            .default = word1))
+
+n_palabras_pares <- length(unique(c(HT_bigram$word1, HT_bigram$word2)))
+
+cel <- tibble(n = paste0("n_", c("ah", "sl", "nc", "ow", "em"))) |> 
+  mutate(label = glue("<img src='{here('pic')}/{n}.png' width='20' />")) |> 
+  mutate(x = c(-Inf, -Inf, Inf, Inf, 0)) |> 
+  mutate(y = c(Inf, -Inf, Inf, -Inf, -1))
+
+set.seed(2024); g_bigram <- HT_bigram %>%
+  graph_from_data_frame() %>%
+  ggraph(layout = "fr") +
+  # celebridades
+  geom_richtext(data = cel, aes(x = x, y = y, label = label), 
+                inherit.aes = FALSE, fill = NA, label.color = NA) +
+  # nodos
+  geom_node_point(color = "#ee4121", size = 1, shape = 16, alpha = 1) +
+  # líneas de unión
+  geom_edge_link(show.legend = FALSE,
+                 angle_calc = "along",
+                 color = "#ffc10e",
+                 alpha = .5,
+                 end_cap = circle(.1, 'line'),
+                 start_cap = circle(.1, 'line'),
+                 arrow = arrow(angle = 12, type = "open",
+                               length = unit(.4, "line"))) +
+  # etiqueta
+  geom_node_label(aes(label = name), vjust = .5, hjust = .5, color = "white",
+                  repel = TRUE, fill = alpha("grey40", .1),
+                  label.r = unit(0, "line"), label.size = unit(0, "line"),
+                  label.padding = unit(.1, "line")) +
+  theme_void() +
+  labs(x = NULL, y = NULL,
+       title = "PALABRAS <span style='color:#ee4121;'>CRUZADAS</span>",
+       subtitle = glue("Pares de palabras que usualmente se encuentran acompañadas. 
+       El sentido de<br>las flechas indica el orden entre ellas. Son 
+       <span style='color:#ffc10e;'>{n_palabras_pares}</span> palabras 
+       extraídas de la descripción<br>de los episodios."),
+       caption = glue("{fuente} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(aspect.ratio = 1,
+        panel.border = element_rect(color = NA, fill = NA),
+        panel.spacing.y = unit(1.5, "line"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        strip.text = element_text(color = "#ee4121", family = "bebas", 
+                                  size = 30, hjust = 0),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.title = element_markdown(size = 32, family = "friz_bold",
+                                      color = "#ffc10e"),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium",
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(15, 0, 0, 0), size = 9),
+        plot.caption.position = "plot",
+        plot.margin = margin(5, 20, 5, 15),
+        plot.tag = element_markdown(color = "grey40", size = 10, family = "titillium",
+                                    hjust = 0),
+        plot.tag.position = c(.75, .13))
+
+ggsave(plot = g_bigram,
+       filename = here("fig/HT_09.png"),
+       width = 15,
+       height = 18,
+       units = "cm",
+       dpi = 300)
+
+# texto
+
+max_par_1 <- HT_bigram |> 
+  slice_max(n, n = 1) |> 
+  pull(n)
+
+max_par_flor <- HT_bigram |> 
+  filter(word1 == "Fiorella") |> 
+  pull(n)
+
+max_par_calu <- HT_bigram |> 
+  filter(word1 == "Santiago") |> 
+  pull(n)
+
+max_par_nic <- HT_bigram |> 
+  filter(word1 == "Nicolas") |> 
+  pull(n)
+
+max_par_armie <- HT_bigram |> 
+  filter(word1 == "Armie") |> 
+  pull(n)
+```
+:::
+
+::: {.column-screen-inset-right}
+![Pares de palabras consecutivas que aparecen más frecuentemente, de acuerdo a los términos encontrados en las descripciones de los episodios.](fig/HT_09.png){#fig-09 fig-align="center"}
+:::
+
+Los análisis de texto vistos hasta ahora involucraban palabras individuales, aisladas. En la @fig-09 se muestran las secuencias consecutivas más frecuentes de dos palabras, llamado **bigrama**, formado a partir de los términos de todas las descripciones. No se consideró el texto presente en los títulos, ya que son secuencias cortas de palabras. 
+
+Un bigrama muestra los pares de palabras que más comúnmente aparecen juntas. Por ejemplo, es un buen ejercicio para identificar nombres propios en una novela, entendidos como secuencias de dos palabras compuestas por el nombre inmediatamente seguido del apellido.
+
+Dada la naturaleza del texto analizado organizado en oraciones, es relevante investigar cuales palabras aparecen siempre acompañadas unas de otras.
+
+Todos los pares de palabras de la figura aparecen al menos 5 veces. No se muestra la cantidad de apariciones de cada par de palabras, para no cargar demasiado la figura. En el primer puesto está, claro, <ht>HOY TRASNOCHE</ht>, con `r max_par_1` repeticiones. Seguido de los nombres formales de quienes conducen, <code>Fiorella Sargenti</code> (95) y <code>Santiago Calori</code> (94). Aunque ya establecimos sus verdaderos nombres en la @sec-tex-nom.
+
+Aparecen cinco celebridades, viejos conocidos de las coyunturas. <code>Ezra Miller</code> y <code>Nic Cage</code> comparten el primer puesto con 7 apariciones. Nic es el único que aparece por hacer su trabajo y no por estar metido en quilombos. Más de esto en la @sec-pel-elenco. Armie, Olivia y Shia coinciden en 5 apariciones, aunque tengo la sensación de que los mencionó mucho más.
+
+Se ven pares de palabras aisladas, como <code>HBO Max</code> y <code>posta offline</code>. También hay agrupaciones, como <code>nuevo episodio</code> y <code>último episodio</code> (nótese el sentido de las flechas). El grupo más grande incluye los temas centrales de <ht>HOY TRASNOCHE</ht>: <code>Calu</code>, <code>Flor</code>, <code>cine</code>, <code>películas</code>, <code>semana</code>, entro otros.
+
+# Análisis de imágenes {#sec-img}
+
+::: {.column-screen-inset-right}
+```{r 11_miniaturas_imagenes}
+# 10.- miniatura ----------------------------------------------------------
+library(jpeg)
+library(grid)
+
+# descarga de las imágenes, 640x640
+mini_desc <- read_tsv(here("data/spotify_datos_url.tsv")) |> 
+  select(release_date, url, height) |> 
+  mutate(fecha = ymd(release_date)) |> 
+  filter(height == 64) |> 
+  select(fecha, url) |> 
+  mutate(file = glue("{format(fecha, '%Y%m%d')}_{str_sub(url, start = -5, end = -1)}"))
+
+# función para descarga automática de todas las miniaturas de HT, 
+# en tamaño 64x64, .jpg
+# map2(.x = mini_desc$url,
+#      .y = glue("{here()}/mini_64/{mini_desc$file}.jpg"),
+#      ~ download.file(url = .x, destfile = .y, method = "curl"))
+
+fecha_misc <- HT_all |>
+  filter(name %in% c(vec_HT_matomil, vec_HT_misc)) |>
+  mutate(fecha = ymd(release_date)) |>
+  select(name, fecha) |>
+  mutate(fecha = format(fecha, "%Y%m%d")) |>
+  pull(fecha)
+
+files <- tibble(files = list.files(path = here("mini_64"), pattern = ".jpg",
+                                   full.names = TRUE),
+                files_n = list.files(path = here("mini_64"), pattern = ".jpg",
+                                     full.names = FALSE)) |>
+  separate(col = files_n, into = c("fe", NA), sep = "_") |>
+  filter(!fe %in% fecha_misc) |>
+  pull(files)
+
+# leo los archivos
+mini_lista <- map(.x = files, ~ readJPEG(.x))
+
+# convierto a ráster, en formato HEX (tengo acceso a los colores RGB)
+raster_lista <- map(.x = mini_lista, ~ as.raster(.x))
+
+# convierto a valores RGB (0-255)
+mat_rgb_lista <- map(.x = raster_lista, ~ col2rgb(.x))
+
+# vector de archivos únicos (10 elementos)
+vec_arc_u_640 <- tibble(mat_rgb = mat_rgb_lista) |> 
+  # obtengo los valores medios p/c color (R, G, B)
+  mutate(rojo = map(.x = mat_rgb, ~ mean(.x[1, ])) |> list_simplify()) |> 
+  mutate(verde = map(.x = mat_rgb, ~ mean(.x[2, ])) |> list_simplify()) |> 
+  mutate(azul = map(.x = mat_rgb, ~ mean(.x[3, ])) |> list_simplify()) |> 
+  # calculo el color medio global de c/imagen
+  mutate(color_prom = rgb(rojo, verde, azul, 
+                          maxColorValue = 255)) |> 
+  select(color_prom) |> 
+  # archivos 640
+  mutate(arch = str_replace(files, "mini_64", "mini_640")) |> 
+  mutate(fecha = str_sub(arch, -18, -10) |> ymd()) |> 
+  arrange(fecha) |> 
+  mutate(color_prom = fct_reorder(color_prom, fecha)) |> 
+  mutate(unic = as.numeric(color_prom)) |> 
+  # 1 = 3; 4 = 5; 7 = 13; 12 = 14
+  mutate(unic = case_match(unic,
+                           3 ~ 1,
+                           5 ~ 4,
+                           13 ~ 7,
+                           14 ~ 12,
+                           .default = unic)) |> 
+  mutate(unic = factor(unic)) |> 
+  group_by(unic) |> 
+  filter(row_number() == 1) |> 
+  pull(arch)
+
+HT_mini <- tibble(mat_rgb = mat_rgb_lista) |> 
+  # obtengo los valores medios p/c color (R, G, B)
+  mutate(rojo = map(.x = mat_rgb, ~ mean(.x[1, ])) |> list_simplify()) |> 
+  mutate(verde = map(.x = mat_rgb, ~ mean(.x[2, ])) |> list_simplify()) |> 
+  mutate(azul = map(.x = mat_rgb, ~ mean(.x[3, ])) |> list_simplify()) |> 
+  # calculo el color medio global de c/imagen
+  mutate(color_prom = rgb(rojo, verde, azul, 
+                          maxColorValue = 255)) |> 
+  select(color_prom) |> 
+  # archivos 640
+  mutate(arch = str_replace(files, "mini_64", "mini_640")) |> 
+  mutate(fecha = str_sub(arch, -18, -10) |> ymd()) |> 
+  arrange(fecha) |> 
+  mutate(color_prom = fct_reorder(color_prom, fecha)) |> 
+  mutate(unic = as.numeric(color_prom)) |> 
+  # 1 = 3; 4 = 5; 7 = 13; 12 = 14
+  mutate(unic = case_match(unic,
+                           3 ~ 1,
+                           5 ~ 4,
+                           13 ~ 7,
+                           14 ~ 12,
+                           .default = unic)) |> 
+  mutate(unic = factor(unic)) |> 
+  mutate(u = as.numeric(unic)) |> 
+  mutate(u = LETTERS[u] |> factor() |> fct_rev())
+
+# miniaturas únicas y su LETRA correspondiente
+# HT_mini |> 
+#   group_by(u) |> 
+#   filter(row_number() == 1) |> 
+#   ungroup() |> 
+#   select(fecha, u)
+
+# fecha inicial
+mini_i <- HT_mini |> 
+  group_by(u) |> 
+  filter(row_number() == 1) |> 
+  ungroup() |> 
+  select(fecha, u) |> 
+  mutate(fecha2 = format(fecha, "%d<br>%b<br>%y") %>% str_remove(., "\\.") |> toupper())
+
+# fecha final
+mini_f <- HT_mini |> 
+  group_by(u) |> 
+  filter(row_number() == max(row_number())) |> 
+  ungroup() |> 
+  select(fecha, u) |> 
+  anti_join(mini_i, by = c("fecha", "u")) |> 
+  mutate(fecha2 = format(fecha, "%d<br>%b<br>%y") %>% str_remove(., "\\.") |> toupper())
+
+# eje horizontal
+vec_fecha_break <- ymd(paste0(2017:2023, "0701"))
+
+mini_izq <- tibble(arch = list.files(path = here("u_640"),
+                                     pattern = ".jpg$",
+                                     full.names = TRUE)[5:1]) |> 
+  mutate(mini = glue("<img src='{arch}' width='100' />")) |> 
+  mutate(let = LETTERS[5:1]) |> 
+  mutate(x = 0) |> 
+  mutate(y = seq(-4, 16, length.out = 5))
+
+mini_der <- tibble(arch = list.files(path = here("u_640"),
+                                     pattern = ".jpg$",
+                                     full.names = TRUE)[10:6]) |> 
+  mutate(mini = glue("<img src='{arch}' width='100' />")) |> 
+  mutate(let = LETTERS[10:6]) |> 
+  mutate(x = 0) |> 
+  mutate(y = seq(-4, 16, length.out = 5))
+
+grid_h <- tibble(x = ymd(20170101), 
+                 xend = ymd(20240101), 
+                 y = seq(.5, 9.5, 1), 
+                 yend = y)
+
+ac_10 <- tibble(x = ymd(20180101, 20190101), y = c(11.25, 10.4),
+                label = c("Primer uso de<br>la imagen",
+                          "Último uso de<br>la imagen"),
+                hjust = 0, vjust = 1)
+
+fl_10 <- tibble(x = ymd(20171215, 20190101), y = c(11, 10.4),
+                xend = ymd(20170401, 20180301), yend = c(10.4, 10.1))
+
+g_m2 <- ggplot(data = HT_mini, aes(x = fecha, y = as.numeric(u))) +
+  # grilla
+  geom_vline(xintercept = seq.Date(ymd(20170101), ymd(20230101), "1 year"),
+             color = "grey30", linewidth = .1) +
+  geom_segment(data = grid_h, aes(x = x, xend = xend, y = y, yend = yend),
+               inherit.aes = FALSE, color = "grey30", linewidth = .1) +
+  # eje vertical izq
+  geom_text(aes(label = u, x = ymd(20160301)), color = "white", family = "bebas",
+            size = 11) +
+  # puntos
+  geom_point(shape = "|", color = "#ffc10e", size = 5, alpha = .8) +
+  # fecha i
+  geom_richtext(data = mini_i, aes(x = fecha, y = as.numeric(u), label = fecha2), color = "white",
+                size = 3, nudge_x = -.1, nudge_y = 0, hjust = 1, vjust = .5,
+                fill = NA, label.color = NA, family = "titillium") +
+  # fecha f
+  geom_richtext(data = mini_f, aes(x = fecha, y = as.numeric(u), label = fecha2), color = "white",
+                size = 3, nudge_x = .1, nudge_y = 0, hjust = 0, vjust = .5,
+                fill = NA, label.color = NA, family = "titillium") +
+  # aclaraciones
+  geom_richtext(x = ac_10$x[1], y = ac_10$y[1], label = ac_10$label[1], 
+                hjust = ac_10$hjust[1], vjust = ac_10$vjust[1], inherit.aes = FALSE, 
+                color = "white", size = 3, fontface = "italic", family = "titillium", 
+                fill = NA, label.color = NA) +
+  geom_richtext(x = ac_10$x[2], y = ac_10$y[2], label = ac_10$label[2], 
+                hjust = ac_10$hjust[2], vjust = ac_10$vjust[2], inherit.aes = FALSE, 
+                color = "white", size = 3, fontface = "italic", family = "titillium", 
+                fill = NA, label.color = NA) +
+  # flechas
+  geom_curve(x = fl_10$x[1], y = fl_10$y[1], xend = fl_10$xend[1], 
+             yend = fl_10$yend[1], color = "white", inherit.aes = FALSE, 
+             arrow.fill = "white", curvature = +.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  geom_curve(x = fl_10$x[2], y = fl_10$y[2], xend = fl_10$xend[2], 
+             yend = fl_10$yend[2], color = "white", inherit.aes = FALSE, 
+             arrow.fill = "white", curvature = -.1, linewidth = .3, 
+             arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
+  # ejes
+  scale_x_date(breaks = vec_fecha_break,
+               date_labels = "'%y") +
+  scale_y_continuous() +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(aspect.ratio = 1.5,
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(family = "bebas", size = 23,
+                                   color = alpha("grey30", 1)),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.margin = margin(5, 5, 5, 5))
+
+g_m1 <- ggplot() +
+  # miniaturas IZQUIERDA
+  geom_richtext(data = mini_izq, aes(x = x, y = y, label = mini),
+                inherit.aes = FALSE, fill = "grey20", vjust = .5, hjust = .5) +
+  geom_richtext(data = mini_izq, 
+                aes(x = x-.6, y = y, label = glue("{let}.")),
+                inherit.aes = FALSE, fill = NA, vjust = .5, hjust = .5,
+                color = "grey30", label.color = NA, family = "bebas", size = 7) +
+  # ejes
+  scale_x_continuous(limits = c(-.6, .5)) +
+  scale_y_continuous(limits = c(-4, 16)) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(aspect.ratio = 3.8,
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.margin = margin(0, 0, 0, 0))
+
+g_m3 <- ggplot() +
+  # miniaturas DERECHA
+  geom_richtext(data = mini_der, aes(x = x, y = y, label = mini),
+                inherit.aes = FALSE, fill = "grey20", vjust = .5, hjust = .5) +
+  geom_richtext(data = mini_der, 
+                aes(x = x-.6, y = y, label = glue("{let}.")),
+                # nudge_x = -.01,
+                inherit.aes = FALSE, fill = NA, vjust = .5, hjust = .5,
+                color = "grey30", label.color = NA, family = "bebas", size = 7) +
+  # ejes
+  scale_x_continuous(limits = c(-.6, .5)) +
+  scale_y_continuous(limits = c(-4, 16)) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(aspect.ratio = 3.8,
+        panel.background = element_rect(fill = "black", color = NA),
+        plot.background = element_rect(fill = "black", color = NA),
+        plot.margin = margin(0, 0, 0, 0))
+
+mini_usos <- HT_mini |> 
+  count(u, sort = TRUE)
+
+usos_h <- filter(mini_usos, u == "H") |> pull(n)
+usos_j <- filter(mini_usos, u == "J") |> pull(n)
+usos_f <- filter(mini_usos, u == "F") |> pull(n)
+
+g_m_comp <- g_m1 + g_m2 + g_m3 + 
+  # proporción de c/plot
+  plot_layout(widths = c(.8, 2, .8)) &
+  plot_annotation(title = "MINIATURAS X <span style='color:#ffc10e;'>10</span>",
+                  subtitle = glue("Las miniaturas de los episodios pueden agruparse en
+                  <span style='color:#ffc10e;'>10 imágenes únicas</span>. Del 
+                  total, 3 (<span style='color:#ee4121;'>D</span>, 
+                  <span style='color:#ee4121;'>**G**</span>, 
+                  <span style='color:#ee4121;'>**I**</span>) fueron utilizadas una 
+                  sola<br>vez. Las últimas dos miniaturas 
+                  (<span style='color:#ee4121;'>**F**</span>, 
+                  <span style='color:#ee4121;'>**J**</span>) fueron usados 
+                  <span style='color:#ffc10e;'>{usos_j}</span> veces. 
+                  <span style='color:#ee4121;'>Hoy Trasnoche Diario</span> tuvo 
+                  su propio logo <span style='color:#ffc10e;'>{usos_h}</span> 
+                  veces."),
+                  caption = HT_caption,
+                  theme = theme(
+                    plot.background = element_rect(color = "grey30",
+                                                   fill = "black"),
+                    plot.title.position = "plot",
+                    plot.title = element_markdown(size = 50, family = "friz_bold",
+                                                  color = "#ee4121"),
+                    plot.subtitle = element_markdown(color = "white", size = 12,
+                                                           family = "titillium",
+                                                           margin = margin(2, 0, 10, 0)),
+                    plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                                    margin = margin(1, 0, 0, 0), size = 9),
+                    plot.caption.position = "plot"))
+
+ggsave(plot = g_m_comp,
+       filename = here("fig/HT_10.png"),
+       width = 22,
+       height = 25,
+       units = "cm",
+       dpi = 300)
+
+# texto
+
+mini_u <- HT_mini |> 
+  count(u)
+
+mini_b <- pull(filter(mini_u, u == "B"), n)
+mini_c <- pull(filter(mini_u, u == "C"), n)
+mini_f <- pull(filter(mini_u, u == "F"), n)
+mini_j <- pull(filter(mini_u, u == "J"), n)
+mini_h <- pull(filter(mini_u, u == "H"), n)
+```
+:::
+
+::: {.column-screen-inset-right}
+![Distribución temporal del uso de las imágenes de los episodios. A izquierda y derecha pueden verse las 10 imágenes únicas.](fig/HT_10.png){#fig-10 fig-align="center"}
+:::
+
+Junto con el análisis de texto, algo con lo que nunca había tratado era con archivos de imágenes. Así que intentar encontrarle sentido al operar con las imágenes de los episodios fue muy interesante.
+
+Las imágenes de cada capítulo (según lo encontrado en Spotify) están disponibles en tres resoluciones, 64, 300 y 640 píxeles, cuadradas. El primer paso fue descargar todas las imágenes y registrar la fecha de uso. Luego para agrupar los episodios por su imagen se calculó en color promedio, que es representativo de todas aquellas imágenes repetidas. Para ello se descompuso cada imagen en sus colores básicos (rojo, verde, azul), se promedió para todos los píxeles y se generó un color individual para cada episodio. Luego se agrupó entre estos de acuerdo al color promedio.
+
+Incluyendo <ht>HOY TRASNOCHE DIARIO</ht>, hay 14 imágenes únicas. Existen dos pares cuya única diferencia es la presencia del logo de POSTA, se agruparon convenientemente quedando dos imágenes, **A** y **C**, de la @fig-10. Para el <ht>HOY PORONGA</ht> aparecen dos disponibles, aunque es una diferencia que no pude detectar visualmente, por lo se que unificaron (**E**). Algo similar sucede con el logo usado actualmente: aparecen dos conjuntos de imágenes, que claramente son las mismas (**J**). Descartando las versiones que a simple vista son idénticas, de las 14 imágenes únicas, quedan 10, de la **A** a la **J**.
+
+La **D** fue utilizada una única vez, en [2019](https://open.spotify.com/episode/6j1TkNXmVec8G7MU5KcwTL), al igual que la **G** en [2020](https://open.spotify.com/episode/6ITrKiYfcqmUKJWfH5vgiz). Muy reflejo de su época. La **I** fue un <ht>HOY PORONGA</ht> especial, dedicado a una [película](https://open.spotify.com/episode/0EatJAAU4faIkxw1J7Zqb2) que se escuchaba poco y se entendía menos. Las imágenes tradicionales, ponele, que identifican a <ht>HOY TRASNOCHE</ht> son la **B** (7 usos), **C** (7), **F** (73) y **J** (75). Y <ht>HOY TRASNOCHE DIARIO</ht>, **H** (67), claro.
+
+Es claro que ya encontraron su identidad en cuanto al logo, que con pocos cambios, viene siendo el mismo desde finales de 2018 (inicio de imagen **F**).
+
+Personalmente me encanta la imagen **B**, donde vemos a las estrellas del podcast. Entiendo que el logo actual (**J**) ya es un clásico, pero me gustaría, al menos por una temporada, volver a ver a Flor y Calo.
+
+# Análisis de películas {#sec-pel}
+
+::: {.column-screen-inset-right}
+```{r 12_web_scrapping_datos}
+# paquetes ----
+
+library(TMDb)
+library(rvest)
+
+# caption q/uso en las siguientes figuras
+
+fuente2 <- "<span style='color:#ee4121;'>Datos:</span> <span style='color:#ffc10e;'>{**TMDb**}</span>"
+HT_caption2 <- glue("{fuente2} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")
+
+# Letterboxd ----
+
+link_lista_letterboxd <- "https://letterboxd.com/matiasec/list/hoy-trasnoche-con-capitulo/detail/"
+
+# cantidad de páginas que contienen la lista de películas
+n_lista <- read_html(link_lista_letterboxd) |> 
+  html_elements(xpath = "/html/body/div[1]/div/div/section/div[3]/div[3]/ul/li/a") |> 
+  html_text() |> 
+  as.numeric() |> 
+  max()
+
+# link base para la iteración con 'map()'
+url_base <- "https://letterboxd.com/matiasec/list/hoy-trasnoche-con-capitulo/detail/page/"
+
+# vector con todas las 
+url_vector <- glue("{url_base}{1:{n_lista}}")
+
+# función p/obtener el título de la película y el año de estreno
+f_letterboxd <- function(x) {
+  
+  # título y año
+  ti_an <- read_html(x) |> 
+    html_elements(xpath = "/html/body/div[1]/div/div/section/ul/li/div[2]/h2") |> 
+    html_text()
+  
+  # armo un tibble
+  v <- tibble(peli = ti_an) |> 
+    # separo en título y año
+    separate(peli, c("titulo", "año"), sep = " (?=\\d{4}$)")
+  
+  return(v)
+}
+
+# tibble con los títulos de las películas y el año de estreno
+# pelis_titulo_año <- map(.x = url_vector, ~ f_letterboxd(x = .x)) |> 
+#   list_rbind() |> 
+#   mutate(año = as.numeric(año))
+
+# TMDb ----
+
+api_key <- "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+# búsqueda de los títulos y año de cada película, obtengo el 'id'
+f_id <- function(x, y) {
+  id <- search_multi(api_key = api_key, query = x) |> 
+    as_tibble() |> 
+    unnest(everything()) |> 
+    filter(title == x) |> 
+    mutate(d = abs(year(ymd(release_date)) - y)) |>
+    slice_min(order_by = d, n = 1) |> 
+    slice_max(order_by = popularity, n = 1) |> 
+    pull(id)
+  
+  return(id)
+  
+}
+
+# obtengo el ID de c/película de TMDb
+# ~ 3 minutos
+# hh <- now()
+# pelis_id <- pelis_titulo_año |> 
+#   mutate(id = map2(.x = titulo, .y = año, 
+#                    ~ f_id(x = .x, y = .y))) |> 
+#   unnest(id)
+
+# obtengo toda la info 'crew' (list)
+f_crew <- function(x) {
+  movie_credits(api_key = api_key, id = x)$crew
+}
+
+# obtengo toda la info 'cast' (list)
+f_cast <- function(x) {
+  movie_credits(api_key = api_key, id = x)$cast
+}
+
+# obtengo el elenco a partir de 'cast' (data.frame)
+f_elenco <- function(x) {
+  x$name[1:5]
+}
+
+# obtengo la dirección a partir de 'crew' (data.frame)
+f_direccion <- function(x) {
+  x |> 
+    as_tibble() |> 
+    filter(job == "Director") |> 
+    pull(name)
+}
+
+# obtengo el guión a partir de 'crew' (data.frame)
+f_guion <- function(x) {
+  x |> 
+    as_tibble() |> 
+    filter(job %in% c("Screenplay", "Writer", "Story")) |> 
+    distinct(name) |> 
+    pull(name)
+}
+
+# obtengo el género a partir de 'id' (data.frame)
+f_genero <- function(x) {
+  movie(api_key = api_key, id = x)$genre$name
+}
+
+# tibble con columnas p/crew y cast
+# ~ 7 minutos
+# pelis_crew_cast <- pelis_id |> 
+#   mutate(crew = map(.x = id, ~ f_crew(x = .x))) |> 
+#   mutate(cast = map(.x = id, ~ f_cast(x = .x)))
+
+# obtengo elenco, dirección, guión y género
+# ~ 3 minutos
+# 6400 filas
+# tmdb_datos1 <- pelis_crew_cast |> 
+#   mutate(elenco = map(.x = cast, ~ f_elenco(x = .x))) |> 
+#   mutate(direccion = map(.x = crew, ~ f_direccion(x = .x))) |> 
+#   mutate(guion = map(.x = crew, ~ f_guion(x = .x))) |> 
+#   mutate(genero = map(.x = id, ~ f_genero(x = .x))) |> 
+#   select(-id, -crew, -cast) |> 
+#   unnest(elenco) |> 
+#   unnest(direccion) |> 
+#   unnest(guion) |> 
+#   unnest(genero)
+
+# agrego las películas que quedaron afuera
+# Leaving Neverland & The Viewing AFUERA!
+# 135 filas
+# tmdb_datos2 <- pelis_titulo_año |> 
+#   anti_join(tmdb_datos1 |> distinct(titulo), by = "titulo") |> 
+#   # manualmente :(
+#   mutate(id = c(420648, 479957, 470918, 552180, 517839, NA_real_, 536743, 834027,
+#                 797594, NA_real_)) |> 
+#   drop_na() |> 
+#   mutate(crew = map(.x = id, ~ f_crew(x = .x))) |> 
+#   mutate(cast = map(.x = id, ~ f_cast(x = .x))) |> 
+#   mutate(elenco = map(.x = cast, ~ f_elenco(x = .x))) |> 
+#   mutate(direccion = map(.x = crew, ~ f_direccion(x = .x))) |> 
+#   mutate(guion = map(.x = crew, ~ f_guion(x = .x))) |> 
+#   mutate(genero = map(.x = id, ~ f_genero(x = .x))) |> 
+#   select(-id, -crew, -cast) |> 
+#   unnest(elenco, keep_empty = TRUE) |> 
+#   unnest(direccion, keep_empty = TRUE) |> 
+#   unnest(guion, keep_empty = TRUE) |> 
+#   unnest(genero, keep_empty = TRUE)
+
+# combino ambas bases de datos
+# tmdb_datos <- bind_rows(tmdb_datos1, tmdb_datos2)
+
+# guardo
+# write_tsv(tmdb_datos, here("data/tmdb_datos.tsv"))
+
+# 6560 filas
+tmdb_datos <- read_tsv(here("data/tmdb_datos.tsv"))
+
+```
+:::
+
+El primer paso para el análisis de las películas discutidas en <ht>HOY TRASNOCHE</ht> consiste en tener el listado entero de títulos. Gracias a [esta](https://letterboxd.com/matiasec/list/hoy-trasnoche-con-capitulo/detail/) lista de películas en Letterboxd pude llevar a cabo todo lo que se muestra a continuación.
+
+<span style='background-color:#333333'>No estoy a cargo de dicha lista, no doy fe de que estén absolutamente todas las películas analizadas en todos los episodios, ni tampoco revisé una por una cada entrada. Le pegué una leída general, me pareció correcto y proseguí. Además, jamás voy a poner en tela de duda el trabajo de otro trasnochiter.</span>
+
+De acuerdo con la descripción de la lista, “*No son películas mencionadas ni estrenos comentados, son películas a las que le dedicaron un capítulo*”. Además, cada entrada posee el título del episodio correspondiente. Servicio completo.
+
+Esta sección requirió de web scrapping, que es obtener datos a partir de sitios web. Fue la primera vez que lo hice, así que aprendí un montón en el camino. El paquete principal que usé es {rvest}, junto con las herramientas de desarrollo del navegador de Internet, que permite inspeccionar los elementos de interés. Pude obtener el título de cada película y el año de estreno.
+
+A partir de la base de datos de [The Movie Database](https://www.themoviedb.org/) (TMDB), accesible a partir del paquete homónimo en <code>R</code>, conseguí más datos. Con el título y el año, pueden obtenerse las listas del elenco, el equipo de producción, detalles técnicos, entre otros.
+
+La información obtenida de las `r nrow(distinct(tmdb_datos, titulo))` películas listadas fue: elenco (@sec-pel-elenco), dirección ([-@sec-pel-direccion]), guion ([-@sec-pel-guion]) y género ([-@sec-pel-genero]).
+
+## Elenco {#sec-pel-elenco}
+
+::: {.column-screen-inset-right}
+```{r 13_elenco}
+# 1.- elenco --------------------------------------------------------------
+
+# cantidad de actores por película
+
+elenco_files <- list.files(path = here("pic/elenco"),
+                           pattern = ".jpg",
+                           full.names = TRUE)
+
+elenco_tbl <- tmdb_datos |> 
+  distinct(titulo, elenco, .keep_all = TRUE) |>
+  group_by(titulo) |> 
+  distinct(elenco, .keep_all = TRUE) |> 
+  ungroup() |> 
+  count(elenco, sort = TRUE) |> 
+  filter(n >= 3) |> 
+  inner_join(tmdb_datos, by = "elenco", multiple = "all") |> 
+  arrange(desc(n), elenco) |> 
+  distinct(elenco, titulo, n, año) |> 
+  mutate(elenco = fct_inorder(elenco)) |>
+  mutate(orden = as.numeric(elenco)) |>
+  # TOP 10
+  filter(orden <= 10) |> 
+  arrange(elenco, año) |> 
+  group_by(elenco, orden) |> 
+  mutate(id = row_number()) |> 
+  mutate(M = max(id)) |> 
+  mutate(id = case_match(M, 6 ~ id, 5 ~ id + 1, 4 ~ id + 2, 3 ~ id + 3)) |> 
+  ungroup() |> 
+  mutate(base = str_replace_all(elenco, " ", "_") |> str_to_lower()) |> 
+  mutate(base = glue("p_{base}.jpg")) |> 
+  filter(orden <= 4) |> 
+  mutate(img = glue("<img src='{here('pic/elenco')}/{base}' width='100' />")) |> 
+  mutate(img = fct_inorder(img))
+
+g_elenco_top <- ggplot(data = elenco_tbl, aes(x = 0, y = id)) +
+  # lista títulos
+  geom_richtext(aes(label = titulo), color = "white", family = "titillium",
+                size = 5,
+                position = position_dodge(width = .8, preserve = "total"),
+                hjust = 0, fill = NA, label.color = NA) +
+  # año estreno
+  geom_richtext(aes(label = año), color = "grey70", family = "mono",
+                size = 3,
+                position = position_dodge(width = .8, preserve = "total"),
+                hjust = 0, fill = NA, label.color = NA, vjust = 1.1) +
+  # elenco
+  geom_text(aes(label = str_wrap(elenco, 20), y = 4, x = 6), family = "bebas",
+            hjust = 0, vjust = .5, color = "#ffc10e", size = 10, nudge_x = 3) +
+  # faceta
+  facet_wrap(~ img, ncol = 1, scales = "free", strip.position = "left") +
+  scale_x_continuous(limits = c(-.025, 9)) +
+  scale_y_continuous(limits = c(1, 7)) +
+  coord_cartesian(clip = "off", ylim = c(2, 6), expand = FALSE) +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "TE AMAMOS <span style='color:#ee4121;'>NIC</span><span style='font-family:fa-solid; color:#ee4121;'>&#xf004;</span>",
+       subtitle = glue("El actor más visto es 
+                       <span style='color:#ee4121;'>Nicolas Cage</span>, con 6
+                       películas. Le siguen, con 5, <span style='color:#ee4121;'>Adam Driver</span><br>
+                       (nuestro fletero favorito); luego 
+                       <span style='color:#ee4121;'>Jessi Buckley</span> y 
+                       <span style='color:#ee4121;'>Mia Goth</span>, ambas con 4 
+                       entradas."),
+       caption = HT_caption2) +
+  theme_void() +
+  theme(aspect.ratio = .8,
+        axis.text = element_blank(),
+        strip.text.y.left = element_markdown(angle = 0, vjust = .7,
+                                             margin = margin(0, 20, 0, 0)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        panel.spacing.y = unit(5, "line"),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.margin = margin(5, 177, 5, 7),
+        plot.title = element_markdown(size = 38,family = "friz_bold",
+                                      color = "#ffc10e",
+                                      margin = ,margin(0, 100, 0, 0)),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium", hjust = 0,
+                                         margin = margin(0, 0, 25, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium",
+                                        margin = margin(45, 0, 0, 0), size = 9))
+
+ggsave(plot = g_elenco_top,
+       filename = here("fig/HT_elenco.png"),
+       width = 15,
+       height = 27,
+       units = "cm",
+       dpi = 300)
+
+# texto
+
+resto_elenco <- tmdb_datos |> 
+  distinct(titulo, elenco, .keep_all = TRUE) |>
+  group_by(titulo) |> 
+  distinct(elenco, .keep_all = TRUE) |> 
+  ungroup() |> 
+  count(elenco, sort = TRUE) |> 
+  filter(n >= 3) |> 
+  inner_join(tmdb_datos, by = "elenco", multiple = "all") |> 
+  arrange(desc(n), elenco) |> 
+  distinct(elenco, titulo, n, año) |> 
+  mutate(elenco = fct_inorder(elenco)) |>
+  mutate(orden = as.numeric(elenco)) |>
+  # TOP 10
+  filter(orden <= 10) |> 
+  arrange(elenco, año) |> 
+  group_by(elenco, orden) |> 
+  mutate(id = row_number()) |> 
+  mutate(M = max(id)) |> 
+  mutate(id = case_match(M, 6 ~ id, 5 ~ id + 1, 4 ~ id + 2, 3 ~ id + 3)) |> 
+  ungroup() |> 
+  mutate(base = str_replace_all(elenco, " ", "_") |> str_to_lower()) |> 
+  mutate(base = glue("p_{base}.jpg")) |> 
+  group_by(elenco) |> 
+  slice(1) |> 
+  ungroup() |> 
+  select(elenco, n) |> 
+  mutate(elenco = as.character(elenco))
+
+```
+:::
+
+::: {.column-screen-inset-right}
+![Top 4 protagonistas del elenco más populares, y las películas en las que participaron.](fig/HT_elenco.png){#fig-11 fig-align="center"}
+:::
+
+Los datos del elenco extraídos vía TMDB contienen a todos los integrantes. Por lo que en un ranking donde se los incluye a todos, los primeros puestos están ocupados por actores muy secundarios. Pero mi idea es enfocarme en los protagonistas de cada película. Así que limité el análisis únicamente a los primeros 5 actores y actrices. Usualmente son lo que cualquiera consideraría como los principales.
+
+El primer puesto es para el queridísimo (*me pongo de pie*) **Nic Cage**. Posee seis películas en total, y en la @sec-tex-big aparecía entre los pares de palabras más frecuentes. Con cinco está **Adam Driver**. Boca Campeón. Completan el top 4 **Jessie Buckley** y **Mia Goth**, con 4 películas cada una. Debo admitir que cuando vi el nombre de Jessie Buckley no tenía idea de quién era. Perdón Jessie si estás leyendo esto.
+
+Puede notarse la reciente popularidad ascendente de Mia, que, de sus 5 películas vistas en <ht>HOY TRASNOCHE</ht>, tres son entre el año pasado y este.
+
+El resto de los primeros diez puestos sigue con **`r resto_elenco$elenco[5]`** y **`r resto_elenco$elenco[4]`** con 4 películas cada una. Luego, con 3 aparecen **`r str_flatten_comma(resto_elenco$elenco[7:9])`** y **`r resto_elenco$elenco[10]`**.
+
+## Dirección {#sec-pel-direccion}
+
+::: {.column-screen-inset-right}
+```{r 14_direccion}
+# 2.- dirección -----------------------------------------------------------
+
+direccion_files <- list.files(path = here("pic/direccion"),
+                              pattern = ".jpg",
+                              full.names = TRUE)
+
+direccion_tbl <- tmdb_datos |> 
+  distinct(titulo, direccion) |> 
+  count(direccion, sort = TRUE) |> 
+  filter(n >= 3) |> 
+  inner_join(tmdb_datos, by = "direccion", multiple = "all") |> 
+  arrange(desc(n), direccion) |> 
+  distinct(direccion, titulo, n, año) |> 
+  mutate(direccion = fct_inorder(direccion)) |>
+  mutate(orden = as.numeric(direccion)) |>
+  # TOP 10
+  filter(orden <= 10) |> 
+  arrange(direccion, año) |> 
+  group_by(direccion, orden) |> 
+  mutate(id = row_number()) |> 
+  mutate(M = max(id)) |> 
+  mutate(id = case_match(M, 4 ~ id, 3 ~ id + 1)) |> 
+  ungroup() |> 
+  mutate(base = str_replace_all(direccion, " ", "_") |> str_to_lower()) |> 
+  mutate(base = glue("d_{base}.jpg")) |> 
+  mutate(img = glue("<img src='{here('pic/direccion')}/{base}' width='100' />")) |> 
+  mutate(img = fct_inorder(img))
+
+g_direccion <- ggplot(data = direccion_tbl, aes(x = 0, y = id)) +
+  # lista títulos
+  geom_richtext(aes(label = titulo), color = "white", family = "titillium",
+                size = 5,
+                position = position_dodge(width = .8, preserve = "total"),
+                hjust = 0, fill = NA, label.color = NA) +
+  # año estreno
+  geom_richtext(aes(label = año), color = "grey70", family = "mono",
+                size = 3,
+                position = position_dodge(width = .8, preserve = "total"),
+                hjust = 0, fill = NA, label.color = NA, vjust = 1.1) +
+  # direccion
+  geom_text(aes(label = str_wrap(direccion, 20), y = 3.5, x = 5), family = "bebas",
+            hjust = 0, vjust = .5, color = "#ffc10e", size = 10, nudge_x = 3) +
+  # faceta
+  facet_wrap(~ img, ncol = 1, scales = "free", strip.position = "left") +
+  scale_x_continuous(limits = c(-.025, 9)) +
+  scale_y_continuous(limits = c(1, 5)) +
+  coord_cartesian(clip = "off", ylim = c(2, 4.5), expand = FALSE) +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "STEVEN <span style='color:#ee4121;'>PASIÓN</span>",
+       subtitle = glue("El director más popular de {HT} es 
+                       <span style='color:#ee4121;'>Steven Soderbergh</span>, con<br>
+                       4 películas. <span style='color:#ee4121;'>David Bruckner</span> 
+                       y <span style='color:#ee4121;'>Jordan Peele</span>, con 3, completan 
+                       la terna."),
+       caption = HT_caption2) +
+  theme_void() +
+  theme(aspect.ratio = .8,
+        axis.text = element_blank(),
+        strip.text.y.left = element_markdown(angle = 0, vjust = 1,
+                                             margin = margin(0, 20, 0, 0)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        panel.spacing.y = unit(5, "line"),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.margin = margin(5, 177, 5, 7),
+        plot.title = element_markdown(size = 45,family = "friz_bold",
+                                      color = "#ffc10e",
+                                      margin = ,margin(0, 100, 0, 0)),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium", hjust = 0,
+                                         margin = margin(4, 0, 15, 0)),
+        plot.caption = element_markdown(hjust = 4.5, family = "titillium",
+                                        margin = margin(69, 0, 0, 0), size = 9),
+        plot.caption.position = "plot")
+
+ggsave(plot = g_direccion,
+       filename = here("fig/HT_direccion.png"),
+       width = 15,
+       height = 21.8,
+       units = "cm",
+       dpi =  300)
+
+# texto
+
+resto_direccion <- tmdb_datos |> 
+  distinct(titulo, direccion) |> 
+  count(direccion, sort = TRUE) |> 
+  filter(n == 2) |> 
+  slice(1:10) 
+```
+:::
+
+::: {.column-screen-inset-right}
+![Los 3 directores con mayor cantidad de películas analizadas.](fig/HT_direccion.png){#fig-12 fig-align="center"}
+:::
+
+El director con más películas (4) vistas en <ht>HOY TRASNOCHE</ht> es **Steven Soderbergh**. **Davis Bruckner** y **Jordan Peele**, ambos con 3 películas, completan el podio. Pueden notar que Davis y Jordan repiten en el género de terror. Más detalles en la @sec-pel-genero.
+
+El resto de directores y directoras del top 10, con 2 películas cada uno, son: **`r str_flatten_comma(resto_direccion$direccion[1:9])`** y **`r resto_direccion$direccion[10]`**.
+
+## Guión {#sec-pel-guion}
+
+::: {.column-screen-inset-right}
+```{r 15_guion}
+
+guion_files <- list.files(path = here("pic/guion"),
+                          pattern = ".jpg",
+                          full.names = TRUE)
+
+guion_tbl <- tmdb_datos |> 
+  distinct(titulo, guion) |> 
+  count(guion, sort = TRUE) |> 
+  filter(n >= 3) |> 
+  drop_na(guion) |> 
+  inner_join(tmdb_datos, by = "guion", multiple = "all") |> 
+  arrange(desc(n), guion) |> 
+  distinct(guion, titulo, n, año) |> 
+  mutate(guion = fct_inorder(guion)) |>
+  mutate(orden = as.numeric(guion)) |>
+  # TOP 10
+  filter(orden <= 10) |> 
+  arrange(guion, año) |> 
+  group_by(guion, orden) |> 
+  mutate(id = row_number()) |> 
+  mutate(M = max(id)) |> 
+  mutate(id = case_match(M, 4 ~ id, 3 ~ id + 1)) |> 
+  ungroup() |> 
+  mutate(base = str_replace_all(guion, " ", "_") |> str_to_lower()) |> 
+  mutate(base = glue("g_{base}.jpg")) |> 
+  mutate(img = glue("<img src='{here('pic/guion')}/{base}' width='100' />")) |> 
+  mutate(img = fct_inorder(img)) |> 
+  filter(n == 4 | guion == "Mariano Llinás")
+
+g_guion <- ggplot(data = guion_tbl, aes(x = 0, y = id)) +
+  # lista títulos
+  geom_richtext(aes(label = titulo), color = "white", family = "titillium",
+                size = 5,
+                position = position_dodge(width = .8, preserve = "total"),
+                hjust = 0, fill = NA, label.color = NA) +
+  # año estreno
+  geom_richtext(aes(label = año), color = "grey70", family = "mono",
+                size = 3,
+                position = position_dodge(width = .8, preserve = "total"),
+                hjust = 0, fill = NA, label.color = NA, vjust = 1.1) +
+  # guion
+  geom_text(aes(label = str_wrap(guion, 20), y = 3.5, x = 5), family = "bebas",
+            hjust = 0, vjust = .5, color = "#ffc10e", size = 10, nudge_x = 3) +
+  # faceta
+  facet_wrap(~ img, ncol = 1, scales = "free", strip.position = "left") +
+  scale_x_continuous(limits = c(-.025, 9)) +
+  scale_y_continuous(limits = c(1, 5)) +
+  coord_cartesian(clip = "off", ylim = c(2, 4.5), expand = FALSE) +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "STORY BY <span style='color:#ee4121'>...</span>",
+       subtitle = "<span style='color:#ee4121'>James Wan</span> y 
+       <span style='color:#ee4121'>Jordan Peele</span> comparten el 1<sup>er</sup> 
+       puesto con 4 películas. Por<br>orgullo catastral, sigue 
+       <span style='color:#ee4121'>Mariano Llinás</span>, con 3. Además la foto 
+       es espectacular.",
+       caption = HT_caption2) +
+  theme_void() +
+  theme(aspect.ratio = .8,
+        axis.text = element_blank(),
+        strip.text.y.left = element_markdown(angle = 0, vjust = 1,
+                                             margin = margin(0, 20, 0, 0)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        panel.spacing.y = unit(5, "line"),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.margin = margin(5, 177, 5, 11),
+        plot.title = element_markdown(size = 45,family = "friz_bold",
+                                      color = "#ffc10e",
+                                      margin = ,margin(0, 100, 0, 0)),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium", hjust = 0,
+                                         margin = margin(4, 0, 15, 0)),
+        plot.caption = element_markdown(hjust = 4.5, family = "titillium", color = "white",
+                                        margin = margin(62, 0, 0, 0), size = 9),
+        plot.caption.position = "plot"
+  )
+
+ggsave(plot = g_guion,
+       filename = here("fig/HT_guion.png"),
+       width = 14.9,
+       height = 21,
+       units = "cm",
+       dpi =  300)
+
+# texto
+
+resto_guion <- tmdb_datos |> 
+  distinct(titulo, guion) |> 
+  count(guion, sort = TRUE) |> 
+  filter(n == 3 & guion != "Mariano Llinás") |> 
+  drop_na(guion)
+```
+:::
+
+::: {.column-screen-inset-right}
+![Se muestran los 3 guionistas más recurrentes y las películas que escribieron.](fig/HT_guion.png){#fig-13 fig-align="center"}
+:::
+
+Los datos extraídos de TMDB poseen una columna *job* (puesto de trabajo). Específicamente, me refiero a guionista a todas aquellas personas cuyo puesto sea <code>screenplay</code>, <code>writer</code> o <code>story</code>.
+
+Los guionistas con mayor cantidad de películas son **James Wan** y **Jordan Peele**, ambos con 4.
+
+Aparte de **Mariano Llinás** con 3 películas, otros son: **`r str_flatten_comma(resto_guion$guion[1:2])`** y **`r resto_guion$guion[3]`**.
+
+## Género {#sec-pel-genero}
+
+```{r 16_genero}
+# separador entre el género y su porcentaje
+# separ <- glue("<span style='font-size:12px;color:#4d4d4d;font-family:mono'>{str_flatten(rep('.', 50))}</span>")
+separ <- str_flatten(rep('_', 20))
+
+# dado que las películas suelen tener múltiples géneros, y no uno único, tomo
+# el primer género de la lista p/c película
+genero_tbl <- tmdb_datos |> 
+  # considero TODOS los género incluídos en c/película
+  count(genero, sort = TRUE) |> 
+  mutate(porcentaje = n/sum(n)*100) |> 
+  mutate(sum_acumulada = cumsum(porcentaje)) |> 
+  mutate(genero = fct_lump_n(f = genero, n = 10)) |> 
+  filter(sum_acumulada < 91) |>
+  mutate(valor = 100 - sum_acumulada) |> 
+  mutate(eje_y = lag(valor)) |> 
+  mutate(eje_y = if_else(is.na(eje_y), 100, eje_y)) |> 
+  group_by(genero) |> 
+  mutate(y = mean(c(valor, eje_y))) |> 
+  ungroup() |> 
+  mutate(genero = tolower(genero)) |> 
+  mutate(genero = case_match(genero,
+                             "horror" ~ "terror",
+                             "comedy" ~ "comedia",
+                             "action" ~ "acción",
+                             "crime" ~ "crimen",
+                             "science fiction" ~ "ciencia ficción",
+                             "music" ~ "música",
+                             "fantasy" ~ "fantasía",
+                             "mystery" ~ "misterio",
+                             .default = genero)) |> 
+  mutate(etq = glue("<span style='font-size:{porcentaje*7}px'>{genero}</span><span style='font-size:12px;color:#4d4d4d;font-family:mono'>{separ}</span><span style='font-size:15px;color:#ffc10e;font-family:mono'>{round(porcentaje)}%</span>"))
+
+vec_resto_genero <- tmdb_datos |> 
+  count(genero, sort = TRUE) |> 
+  mutate(porcentaje = n/sum(n)*100) |> 
+  mutate(sum_acumulada = cumsum(porcentaje)) |> 
+  mutate(genero = fct_lump_n(f = genero, n = 10)) |> 
+  filter(sum_acumulada > 91) |>
+  mutate(valor = 100 - sum_acumulada) |> 
+  mutate(genero = as.character(genero)) |> 
+  mutate(suma = sum(valor)) |> 
+  mutate(genero = tolower(genero)) |> 
+  # traducción
+  mutate(genero = case_match(genero,
+                             "documentary" ~ "documental",
+                             "music" ~ "música",
+                             "mystery" ~ "misterio",
+                             "adventure" ~ "aventura",
+                             "fantasy" ~ "fantasía",
+                             "history" ~ "histórica",
+                             "animation" ~ "animación",
+                             "family" ~ "familiar",
+                             "tv movie" ~ "para televisión",
+                             "war" ~ "bélica",
+                             .default = genero)) |> 
+  pull(genero)
+
+resto_genero_tbl <- tibble(x = 0,
+                           y = 10.5,
+                           label = str_wrap(str_flatten_comma(vec_resto_genero), 
+                                            width = 50)) |> 
+  mutate(label = str_replace_all(label, "\\n", "<br>")) |> 
+  mutate(etq = glue("{label}<span style='font-size:12px;color:#4d4d4d;font-family:mono'>{separ}</span><span style='font-size:15px;color:#ffc10e;font-family:mono'>{100-sum(round(genero_tbl$porcentaje))}%</span>"))
+
+lim_tbl <- tibble(x = .5,
+                  y = c(0, 100))
+
+puesto1 <- arrange(genero_tbl, desc(porcentaje)) |> slice(1) |> pull(porcentaje) |> round()
+genero1 <- arrange(genero_tbl, desc(porcentaje)) |> slice(1) |> pull(genero)
+
+puesto2 <- arrange(genero_tbl, desc(porcentaje)) |> slice(2) |> pull(porcentaje) |> round()
+genero2 <- arrange(genero_tbl, desc(porcentaje)) |> slice(2) |> pull(genero)
+
+puesto3 <- arrange(genero_tbl, desc(porcentaje)) |> slice(3) |> pull(porcentaje) |> round()
+genero3 <- arrange(genero_tbl, desc(porcentaje)) |> slice(3) |> pull(genero)
+
+puesto4 <- arrange(genero_tbl, desc(porcentaje)) |> slice(4) |> pull(porcentaje) |> round()
+genero4 <- arrange(genero_tbl, desc(porcentaje)) |> slice(4) |> pull(genero)
+
+suma_top4_puesto <- puesto1 + puesto2 + puesto3 + puesto4
+
+g_genero <- ggplot(data = genero_tbl,
+                  aes(x = 0, y = valor, 
+                      size = I(porcentaje*2), 
+                      label = etq)) +
+  # género
+  geom_richtext(show.legend = FALSE, hjust = 0, fill = NA, label.color = NA,
+                family = "bebas", color = "#ee4121",vjust = 0) +
+  # resto
+  geom_richtext(data = resto_genero_tbl, inherit.aes = FALSE,
+                aes(x, y, label = etq), show.legend = FALSE, hjust = 0, fill = NA, label.color = NA,
+                family = "bebas", color = "#ee4121",vjust = 1) +
+  # manual
+  scale_x_continuous(limits = c(0, 1),
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = c(5, 100),
+                     expand = c(0, 0)) +
+  coord_cartesian(clip = "off") +
+  # ejes
+  labs(x = NULL, y = NULL,
+       title = "DRAMA<span style='color:#ee4121'>QUEENS</span>",
+       subtitle = glue("El género más frecuente es el 
+                       <span style='color:#ee4121'>{genero1}</span> con el 
+                       <span style='color:#ffc10e'>{puesto1}%</span>. Siguen de 
+                       cerca <span style='color:#ee4121'>{genero2}</span> y<br>
+                       <span style='color:#ee4121'>{genero3}</span>, 
+                       con <span style='color:#ffc10e'>{puesto2}%</span>. 
+                       Continúa <span style='color:#ee4121'>{genero4}</span> 
+                       (<span style='color:#ffc10e'>{puesto4}%</span>) y el resto 
+                       de géneros no supera el <span style='color:#ffc10e'>10%</span>."),
+       caption = HT_caption2) +
+  theme_void() +
+  theme(aspect.ratio = 1,
+        axis.text = element_blank(),
+        strip.text.y.left = element_markdown(angle = 0, vjust = 1,
+                                             margin = margin(0, 20, 0, 0)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.background = element_rect(fill = "black", color = NA),
+        panel.spacing.y = unit(5, "line"),
+        plot.background = element_rect(fill = "black", color = "grey30"),
+        plot.margin = margin(5, 5, 0, 5),
+        plot.title = element_markdown(color = "#ffc10e", size = 46,
+                                      family = "friz_bold",
+                                      margin = margin(0, 5, 0, 0)),
+        plot.title.position = "plot",
+        plot.subtitle = element_markdown(color = "white", size = 12,
+                                         family = "titillium", hjust = 0,
+                                         margin = margin(4, 0, 10, 0)),
+        plot.caption = element_markdown(hjust = .5, family = "titillium", 
+                                        color = "white", size = 9,
+                                        margin = margin(27, 0, 5, 0)),
+        plot.caption.position = "plot")
+
+ggsave(plot = g_genero,
+      filename = here("fig/HT_genero.png"),
+      width = 14.9,
+      height = 19.2,
+      units = "cm",
+      dpi = 300)
+
+```
+
+::: {.column-screen-inset-right}
+![Géneros más frecuentes entre todas las películas analizadas. Se indica el valor del porcentaje que representa del total.](fig/HT_genero.png){#fig-14 fig-align="center"}
+:::
+
+El primer puesto de géneros más frecuentes lo ocupa **`r genero1`** (`r puesto1`%). Siguen **`r genero2`** y **`r genero3`**, ambos con `r puesto2`%. Junto con **`r genero4`** (`r puesto4`%), estos cuatro géneros engloban el `r suma_top4_puesto`% de todas las películas.
+
+Cada película posee multiplicidad de géneros involucrados. Es poco frecuente encontrar películas mono-género. Por lo tanto, consideré todos los géneros disponibles para cada película, sin recortar ninguno. Seguramente esto haya causado que drama aparezca en el primer puesto, ya que es un género tan abarcador.
+
+No aparece el género favorito de todos los trasnochiter, el de un profesional de la gran ciudad que vuelve a su pueblo natal para encontrarse con su pasado y …
+
+# Conclusiones {.unnumbered}
+
+Sobre los resultados obtenidos, podemos ver que la producción de capítulos no para. No solamente son más largos (@fig-01), sino que cada año hay más contenido (@fig-02). Si hay un nuevo <ht>HOY TRASNOCHE</ht> significa que es viernes (@fig-03). La regularidad de episodios también se estabilizó (toco madera). Desde abril de 2021 tenemos episodios todos los meses (@fig-04).
+
+Del análisis de texto, surgen resultados que tenemos más presentes, porque tratan del contenido mismo de los episodios (nadie anda contando cuántos capítulos salen en agosto, o cuántos minutos dura cada episodio). Que Fiorella es **Fio** y Santiago es **Calu** (figura 3.1). Que las palabras más recurrentes son poronga, película, caca, cine y semana (figura 3.2). Nunca había sentido tanta satisfacción de ver la palabra 🌈poronga🌈. Un análisis que personalmente me pareció muy interesante fue el de las palabras más importantes (@fig-08). Fue como entrar en una máquina del tiempo. Recordar el videoclub de Calu, el portarretratos con y sin perspectiva de género, las locas aventuras de Laffie, la aparición de Oti en nuestras vidas. En el bigrama (@fig-09) se ven claro los participantes de las coyunturas. La sección policial con los últimos delitos de Ezra Miller, y vimos en tiempo real la cancelación de Armie Hammer.
+
+Respecto de las imágenes que ilustran los episodios, vemos una continuidad en el estilo (@fig-10). La imagen actual y la anterior son muy similares, mostrando un diseño establecido y (a esta altura) fácilmente reconocible. Vale mencionar los casos aislados, como los escasos <ht>HOY PORONGA</ht>.
+
+A partir de las películas analizadas en los episodios vemos el favoritismo por **Nicolas Cage** (@fig-11), totalmente justificado. **Steven Soderbergh**, **James Wan** y **Jordan Peele** son las mentes creativas que más nos cautivan (@fig-11 y [-@fig-12]). El **drama**, el **terror** y el **thriller** son los géneros que más abundan. Aunque entiendo que puede haber una sobrepoblación de *drama*, en el sentido amplio de la palabra.
+
+# Gracias {.unnumbered}
+
+Hacer todo esto llevó una cantidad de tiempo insalubre. Más que nada, eso habla más de mis (in)habilidades en la programación y redacción. Sin embargo, lo disfruté muchísimo. Aprender nuevas funciones de <code>R</code>, plasmar en el script aquello que tenía en la mente y después visualizarlo es algo sumamente satisfactorio. Encontrarme con un problema, buscar potenciales soluciones, y golpearme la cabeza contra la pared hasta hallar la solución, no siempre de manera elegante, pero sí funcional. Respecto de las visualizaciones, probar diferentes gráficos, que no salga como querés, borrar todo y empezar de nuevo. Meterme en temas totalmente desconocidos y salir con conocimientos nuevos, como manipular texto e imágenes, y extraer datos de Internet con web scrapping.
+
+Si habiendo leído todo, llegaste hasta acá, espero haya sido una experiencia interesante. Muchas gracias.
+
+Si por alguna razón le pegaste una leída al código que hay bajo cada figura, espero no haberte espantado. Seguramente haya mil cosas por mejorar, optimizar, aclarar y ajustar. Es más, de acá a un par de años yo mismo voy a ver estos scripts y me voy a querer mword.
+
+Si revisando el código encontraste algo grave, un error marca cañón, chiflá. No lo dudes.
+
+Si te gustan las infografías, tomé mucha inspiración de [chartr](https://read.chartr.co/) y [VISUAL CAPITALIST](https://www.visualcapitalist.com/).
+
+Este proyecto me permitió aprender muchas cosas y afianzar conocimientos y técnicas de extracción, procesamiento y visualización de datos. Esta idea surgió a partir de los objetivos planteados por [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday). Trabajar con datos *de la realidad*, practicar y aprender.
+
+**Flor** y **Calu**, los escucho desde el primer episodio y me acompañaron en muchos momentos de vida, de los buenos y de los otros. Me he reído como nunca en el transporte público gracias a ustedes. Aprendo un montón escuchándolos, de la industria del cine, de su historia, de la producción de películas, de narrativa, de interpretación. Si hay una cosa por las que voy a estar eternamente agradecidos con ustedes es que me hicieron amar aún más el cine. Sé que no soy el único que coincide conmigo. El pueblo trasnochiter eternamente agradecido.
+
+Y si te gustó, acá abajo en los comentarios déjame un emoji de 🔥, dale a la campanita y dale me gusta que me ayudás un montón y compartilo con tus amigos.
+
+<br><br>
+
+Este reporte, el código de programación que lo creó, las imágenes usadas y las bases de datos están disponibles en [este](https://github.com/vhgauto/ht) repositorio en GitHub. Me encuentran en [Twitter](https://twitter.com/vhgauto) e [Instagram](https://www.instagram.com/vhgauto/).
