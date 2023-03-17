@@ -119,7 +119,7 @@ id_HT <- "6C4MdNWQSPhmzBlIVau30e"
 #                          limit = 50,
 #                          include_meta_info = FALSE,
 #                          offset = x) |> as_tibble()
-
+# 
 #   return(e)
 # }
 # 
@@ -222,8 +222,6 @@ HT_dur <- HT_trad |>
   mutate(dur_media = median(duracion)) |> 
   mutate(cantidad = n()) |> 
   ungroup()
-
-
 
 # aclaraciones
 ac_01 <- tibble(x = c(26, 101), y = c(7, 7.5),
@@ -566,7 +564,7 @@ HT_prop_vier <- HT_trad |>
   group_by(año = year(fecha)) |> 
   count(dia) |> 
   ungroup() |> 
-  filter(dia == "Viernes") |> 
+  filter(dia == "viernes") |> 
   left_join(HT_total_año, by = "año") |> 
   select(año, tot_vier = n, tot_ep) |> 
   mutate(año = factor(año)) |> 
@@ -600,7 +598,7 @@ g_viernes <-  ggplot(data = HT_viernes, aes(x = n_prop, y = año)) +
                          fueron publicados los <span style = 'color:#ffc10e;'>jueves</span>"), inherit.aes = FALSE, hjust = 0,
             color = "white", fill = NA, label.color = NA, family = "titillium",
             vjust = .3) +
-  # propociones viernes por año
+  # proporciones viernes por año
   geom_richtext(data = HT_prop_vier, inherit.aes = FALSE,
                 aes(x = vier_prop/2, y = año, label = glue("{tot_vier}<br>{tot_ep}")),
                 color = "grey80", fill = NA, label.color = NA, family = "mono",
