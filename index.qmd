@@ -2145,7 +2145,6 @@ f_id <- function(x, y) {
 
 # obtengo el ID de c/película de TMDb
 # ~ 3 minutos
-# hh <- now()
 # pelis_id <- pelis_titulo_año |> 
 #   mutate(id = map2(.x = titulo, .y = año, 
 #                    ~ f_id(x = .x, y = .y))) |> 
