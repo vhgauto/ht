@@ -1,6 +1,7 @@
 name: ht
 channels:
   - conda-forge
+  - r
 dependencies:
   - r-tidyverse=2.0.0
   - r-showtext=0.9
@@ -8,3 +9,5 @@ dependencies:
   - r-fontawesome=0.5.0
   - r-patchwork=1.1.2
   - r-here=1.0.1
+  - r-tmdb=1.1
+  - r-spotifyr=2.2.4
