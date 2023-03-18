@@ -179,6 +179,28 @@ HT <- glue("<span style='font-family:friz_bold; font-weight: bold; color:#ffc10e
 
 HTD <- glue("<span style='font-family:friz_bold; font-weight: bold; color:#ffc10e; background-color:#ee4121'>HOY TRASNOCHE DIARIO</span>")
 
+# genera la imagen del final, al fondo
+# df1 <- tibble(arch = c("f_calu", "f_flor", "n_bb", "n_de", "n_hu", "n_la", "n_nc",
+#                      "n_tf", "oti", "n_rh", "n_dt", "n_lb")) |> 
+#   mutate(path = glue("{here()}/pic/{arch}.png")) |> 
+#   mutate(x = row_number()) |> 
+#   mutate(y = 0) |> 
+#   mutate(ins = glue("<img src='{path}' height='40'>"))
+# 
+# 
+# g_u <- ggplot(data = df1, aes(x, y, label = ins)) +
+#   geom_richtext(label.color = NA, fill = NA) +
+#   theme_void() +
+#   theme(plot.background = element_rect(color = NA, fill = "black"),
+#         panel.background = element_rect(color = NA, fill = "black"))
+# 
+# ggsave(plot = g_u,
+#        filename = here("fig/u.png"),
+#        width = 40,
+#        height = 2,
+#        units = "cm"); browseURL(here("fig/u.png"))
+
+
 ```
 :::
 
@@ -2086,6 +2108,11 @@ library(rvest)
 fuente2 <- "<span style='color:#ee4121;'>Datos:</span> <span style='color:#ffc10e;'>{**TMDb**}</span>"
 HT_caption2 <- glue("{fuente2} {sep} {autor} {sep} {icon_github} {icon_twitter} {usuario}")
 
+# base de datos (al 20230317)
+# así no tengo que extraer todos los datos de nuevo
+# verifico los títulos nuevos y agrego a la base de datos
+# tmdb_datos <- read_tsv(here("data/tmdb_datos.tsv"))
+
 # Letterboxd ----
 
 link_lista_letterboxd <- "https://letterboxd.com/matiasec/list/hoy-trasnoche-con-capitulo/detail/"
@@ -2128,6 +2155,14 @@ f_letterboxd <- function(x) {
 
 api_key <- "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
+# verifico películas nuevas
+# NO considero Leaving Neverland & The Viewing
+# no_peli <- c("Leaving Neverland", "The Viewing")
+# nueva_peli <- pelis_titulo_año |> 
+#   anti_join(tmdb_datos |> distinct(titulo, año),
+#             by = join_by(titulo, año)) |> 
+#   filter(!titulo %in% no_peli)
+
 # búsqueda de los títulos y año de cada película, obtengo el 'id'
 f_id <- function(x, y) {
   id <- search_multi(api_key = api_key, query = x) |> 
@@ -2145,9 +2180,9 @@ f_id <- function(x, y) {
 
 # obtengo el ID de c/película de TMDb
 # ~ 3 minutos
-# pelis_id <- pelis_titulo_año |> 
-#   mutate(id = map2(.x = titulo, .y = año, 
-#                    ~ f_id(x = .x, y = .y))) |> 
+# pelis_id <- nueva_peli |>
+#   mutate(id = map2(.x = titulo, .y = año,
+#                    ~ f_id(x = .x, y = .y))) |>
 #   unnest(id)
 
 # obtengo toda la info 'crew' (list)
@@ -2189,22 +2224,22 @@ f_genero <- function(x) {
 
 # tibble con columnas p/crew y cast
 # ~ 7 minutos
-# pelis_crew_cast <- pelis_id |> 
-#   mutate(crew = map(.x = id, ~ f_crew(x = .x))) |> 
+# pelis_crew_cast <- pelis_id |>
+#   mutate(crew = map(.x = id, ~ f_crew(x = .x))) |>
 #   mutate(cast = map(.x = id, ~ f_cast(x = .x)))
 
 # obtengo elenco, dirección, guión y género
 # ~ 3 minutos
 # 6400 filas
-# tmdb_datos1 <- pelis_crew_cast |> 
-#   mutate(elenco = map(.x = cast, ~ f_elenco(x = .x))) |> 
-#   mutate(direccion = map(.x = crew, ~ f_direccion(x = .x))) |> 
-#   mutate(guion = map(.x = crew, ~ f_guion(x = .x))) |> 
-#   mutate(genero = map(.x = id, ~ f_genero(x = .x))) |> 
-#   select(-id, -crew, -cast) |> 
-#   unnest(elenco) |> 
-#   unnest(direccion) |> 
-#   unnest(guion) |> 
+# tmdb_datos1 <- pelis_crew_cast |>
+#   mutate(elenco = map(.x = cast, ~ f_elenco(x = .x))) |>
+#   mutate(direccion = map(.x = crew, ~ f_direccion(x = .x))) |>
+#   mutate(guion = map(.x = crew, ~ f_guion(x = .x))) |>
+#   mutate(genero = map(.x = id, ~ f_genero(x = .x))) |>
+#   select(-id, -crew, -cast) |>
+#   unnest(elenco) |>
+#   unnest(direccion) |>
+#   unnest(guion) |>
 #   unnest(genero)
 
 # agrego las películas que quedaron afuera
@@ -2229,12 +2264,12 @@ f_genero <- function(x) {
 #   unnest(genero, keep_empty = TRUE)
 
 # combino ambas bases de datos
-# tmdb_datos <- bind_rows(tmdb_datos1, tmdb_datos2)
+# tmdb_datos <- bind_rows(tmdb_datos, tmdb_datos1)
 
 # guardo
 # write_tsv(tmdb_datos, here("data/tmdb_datos.tsv"))
 
-# 6560 filas
+# 6680 filas
 tmdb_datos <- read_tsv(here("data/tmdb_datos.tsv"))
 
 ```
@@ -2775,7 +2810,7 @@ Del análisis de texto, surgen resultados que tenemos más presentes, porque tra
 
 Respecto de las imágenes que ilustran los episodios, vemos una continuidad en el estilo (@fig-10). La imagen actual y la anterior son muy similares, mostrando un diseño establecido y (a esta altura) fácilmente reconocible. Vale mencionar los casos aislados, como los escasos <ht>HOY PORONGA</ht>.
 
-A partir de las películas analizadas en los episodios vemos el favoritismo por **Nicolas Cage** (@fig-11), totalmente justificado. **Steven Soderbergh**, **James Wan** y **Jordan Peele** son las mentes creativas que más nos cautivan (@fig-11 y [-@fig-12]). El **drama**, el **terror** y el **thriller** son los géneros que más abundan. Aunque entiendo que puede haber una sobrepoblación de *drama*, en el sentido amplio de la palabra.
+A partir de las películas analizadas en los episodios vemos el favoritismo por **Nicolas Cage** (@fig-11), totalmente justificado. **Steven Soderbergh**, **James Wan** y **Jordan Peele** son las mentes creativas que más nos cautivan (@fig-12 y [-@fig-13]). El **drama**, el **terror** y el **thriller** son los géneros que más abundan (@fig-14). Aunque entiendo que puede haber una sobrepoblación de *drama*, por el sentido amplio de la palabra.
 
 # Gracias {.unnumbered}
 
@@ -2783,9 +2818,9 @@ Hacer todo esto llevó una cantidad de tiempo insalubre. Más que nada, eso habl
 
 Si habiendo leído todo, llegaste hasta acá, espero haya sido una experiencia interesante. Muchas gracias.
 
-Si por alguna razón le pegaste una leída al código que hay bajo cada figura, espero no haberte espantado. Seguramente haya mil cosas por mejorar, optimizar, aclarar y ajustar. Es más, de acá a un par de años yo mismo voy a ver estos scripts y me voy a querer mword.
+Si por alguna razón le pegaste una leída al código que hay bajo cada figura, espero no haberte espantado. Seguramente haya mil cosas por mejorar, optimizar, aclarar y ajustar. Es más, de acá a un par de años yo mismo voy a ver estos scripts y me voy a querer m4t4r.
 
-Si revisando el código encontraste algo grave, un error marca cañón, chiflá. No lo dudes.
+Si revisando el código encontraste algo grave, chiflá. No lo dudes.
 
 Si te gustan las infografías, tomé mucha inspiración de [chartr](https://read.chartr.co/) y [VISUAL CAPITALIST](https://www.visualcapitalist.com/).
 
@@ -2793,8 +2828,14 @@ Este proyecto me permitió aprender muchas cosas y afianzar conocimientos y téc
 
 **Flor** y **Calu**, los escucho desde el primer episodio y me acompañaron en muchos momentos de vida, de los buenos y de los otros. Me he reído como nunca en el transporte público gracias a ustedes. Aprendo un montón escuchándolos, de la industria del cine, de su historia, de la producción de películas, de narrativa, de interpretación. Si hay una cosa por las que voy a estar eternamente agradecidos con ustedes es que me hicieron amar aún más el cine. Sé que no soy el único que coincide conmigo. El pueblo trasnochiter eternamente agradecido.
 
-Y si te gustó, acá abajo en los comentarios déjame un emoji de 🔥, dale a la campanita y dale me gusta que me ayudás un montón y compartilo con tus amigos.
+Y si te gustó, acá abajo en los comentarios déjame un emoji de 🔥, dale a la campanita y dale me gusta que me ayudás un montón.
 
 <br><br>
 
 Este reporte, el código de programación que lo creó, las imágenes usadas y las bases de datos están disponibles en [este](https://github.com/vhgauto/ht) repositorio en GitHub. Me encuentran en [Twitter](https://twitter.com/vhgauto) e [Instagram](https://www.instagram.com/vhgauto/).
+
+<br><br><br>
+
+::: {.column-screen}
+![](fig/u.png){fig-align="center"}
+:::
