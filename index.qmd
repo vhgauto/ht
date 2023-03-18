@@ -52,16 +52,16 @@ execute:
 <!-- que el contenido (imagen, code) se desplace a la derecha -->
 <!-- https://quarto.org/docs/authoring/article-layout.html#overflowing-content -->
 
-# El mejor podcast del mundo {.unnumbered}
+# El único y mejor podcast del mundo {.unnumbered}
 
 <!-- cómo personalizar el hipervínculo interno de referencias cruzadas -->
 <!-- https://quarto.org/docs/books/book-crossrefs.html#creating-references -->
 
-[<ht>HOY TRASNOCHE</ht>](https://open.spotify.com/show/6C4MdNWQSPhmzBlIVau30e) es el podcast de cine definitivo. Conducido por **Fiorella Sargenti** y **Santiago Calori**, producido por [POSTA](https://www.posta.fm/podcast/hoy-trasnoche/), inició el [17 de abril de 2017](https://open.spotify.com/episode/5ceIa28JqMUOo3cwU8K5jG), es un programa semanal (usualmente los viernes) en el que durante 1 hora se habla de 🌈CINE🌈. Ya sean los estrenos de la semana, las noticias del momento, caprichos variados, sagas, recomendaciones, anécdotas de la industria, personajes pintorescos, películas inmirables, videoclubs rancios, mascotas come-cable, camperas de corderito, retratos con y sin perspectiva de género, etc.
+[<ht>HOY TRASNOCHE</ht>](https://open.spotify.com/show/6C4MdNWQSPhmzBlIVau30e) es el podcast de cine definitivo. Conducido por **Fiorella Sargenti** y **Santiago Calori**, producido por [POSTA](https://www.posta.fm/podcast/hoy-trasnoche/), es un programa semanal (usualmente los viernes) en el que durante 1 hora se habla de 🌈CINE🌈. Ya sean los estrenos de la semana, las noticias del momento, caprichos variados, sagas, recomendaciones, personajes pintorescos, películas inmirables, videoclubs rancios, mascotas come-cable, camperas de corderito, retratos con y sin perspectiva de género, crónicas fueguinas, etc.
 
-Este reporte está dividido en cinco partes principales. Comienzo con la descripción de la fuente de datos y consideraciones generales (@sec-intro). Los análisis de datos y visualizaciones se dividen en: datos numéricos (@sec-num), como la duración de los episodios, la cantidad de horas totales de contenido anual y las fechas de publicación; palabras (@sec-tex), a partir de los títulos y descripciones de los episodios; imágenes (@sec-img), provenientes de las tapas de los capítulos; y estudio de las películas analizadas (@sec-pel), como actores y directores más frecuentes. Finalmente, conclusiones y agradecimientos.
+Este reporte está dividido en cinco partes principales. Comienzo con la descripción de la fuente de datos y consideraciones generales (@sec-intro). Los análisis y visualizaciones se dividen en: datos numéricos (@sec-num), como la duración de los episodios, la cantidad de horas totales de contenido anual y las fechas de publicación; palabras (@sec-tex), a partir de los títulos y descripciones de los episodios; imágenes (@sec-img), provenientes de las tapas de los capítulos; y estudio de las películas analizadas (@sec-pel), como actores y directores más frecuentes. Finalmente, conclusiones y agradecimientos.
 
-Tienen el menú desplegable a la izquierda para moverse entre secciones.
+Tienen el menú desplegable a la izquierda para moverse entre los capítulos y sus secciones.
 
 # Aclaraciones iniciales {#sec-intro}
 
@@ -218,7 +218,7 @@ Las figuras fueron creadas con [<code>{ggplot2}</code>](https://ggplot2.tidyvers
 
 Dividí los episodios en tres grandes grupos: <ht>HOY TRASNOCHE</ht> propiamente dicho, el de siempre, que escuchamos (casi) todos los viernes; luego <ht>HOY TRASNOCHE DIARIO</ht>, que durante el aislamiento duro de 2020 salía todos los días; y los demás, como ser MATÓ MIL y en los que se habló de otras cosas. Este último grupo fue descartado de todo análisis, sin representar demasiado impacto general ya que son muy pocos episodios. En caso de que se especifique lo contrario, todos los análisis están hechos en base a la información de <ht>HOY TRASNOCHE</ht> tradicional. La cosa sana.
 
-No soy ningún experto en análisis de datos ni en programación. Soy un entusiasta de R, sigo <ht>HOY TRASNOCHE</ht> desde el primer episodio, y nunca me lo pierdo. Hacer todo esto me permitió aprender un montón de programación, manejo de datos, visualización y disfruté un muchísimo todo el proceso.
+No soy ningún experto en análisis de datos ni en programación. Soy un entusiasta de R, sigo <ht>HOY TRASNOCHE</ht> desde el primer episodio, y nunca me lo pierdo. Hacer todo esto me permitió aprender un montón de programación, manejo de datos, visualización y disfruté muchísimo todo el proceso.
 
 # Análisis de datos numéricos {#sec-num}
 
@@ -375,7 +375,7 @@ ep_largo <- HT_trad |>
 
 Las pequeñas líneas verticales amarillas en cada año indican las duraciones individuales de los episodios. La caja del boxplot contiene el 50% de todos los datos, y la línea que lo divide marca la mediana de la distribución de tiempos. La mediana indica el valor central de las duraciones. Por ejemplo, para 2019, la mitad de todos los episodios duró menos de 53 minutos, y la otra mitad duró más de 53 minutos.
 
-La @fig-01 muestra la evolución de la duración de los episodios, año a año. Comenzando en 2017, con solo `r ep_2017` programas y `r round(med_2017)` minutos de extensión, hasta 2023 con casi una hora y media (`r round(med_2023)`), aunque aún con pocas emisiones. Me parece relevante mostrar la marca (vertical a trazos) de los 60 minutos, donde queda claro que durante los primeros cuatro años de <ht>HOY TRASNOCHE</ht> la mediana era sub-1 hora. A partir de 2021 se superó esa marca, desde entonces sigue en aumento.
+La @fig-01 muestra la evolución de la duración de los episodios, año a año. Comenzando en 2017, con solo `r ep_2017` programas y `r round(med_2017)` minutos de extensión, hasta 2023 con casi una hora y media (`r round(med_2023)`), aunque aún con pocas emisiones. Me parece relevante mostrar la marca (vertical a trazos) de los 60 minutos, donde queda claro que durante los primeros cuatro años de <ht>HOY TRASNOCHE</ht> la mediana era sub-1 hora. A partir de 2021 se superó esa marca, y desde entonces sigue en aumento.
 
 El capítulo más corto es de `r round(ep_corto$duracion)` minutos, titulado justamente [`r ep_corto$name`](https://open.spotify.com/episode/2BkTi0k3q1JtcBdl9Uua5L), del `r format(ep_corto$fecha, "%d de %B de %Y")`. Con `r floor((ep_largo$duracion)/60)` hora y `r floor(((ep_largo$duracion)/60 - floor((ep_largo$duracion)/60))*60)` minutos, el capítulo más largo es [`r ep_largo$name`](https://open.spotify.com/episode/6ig7lNaKK13LJlrGBbE4No), publicado el `r format(ep_largo$fecha, "%d de %B de %Y")`.
 
@@ -700,7 +700,7 @@ jueves_2020 <- HT_jueves |>
 ![Las columnas muestran el porcentaje anual de publicación los viernes. Se muestra la cantidad de episodios anuales y cuántos de estos se publicaron un viernes.](fig/HT_03.png){#fig-03 fig-align="center"}
 :::
 
-A diferencia de las secciones previas (@sec-num-dur y [-@sec-num-tot]) donde se analizaron las duraciones de los episodios, en esta sección se confirma que: si es viernes, hay <ht>HOY TRASNOCHE</ht>, digamos. No quiere decir que salga todos los viernes, eso se analiza en la @sec-num-pala. Significa que cada vez que hubo un nuevo episodio, muy probablemente fue viernes.
+A diferencia de las secciones previas (@sec-num-dur y [-@sec-num-tot]) donde se analizaron las duraciones de los episodios, en esta sección se habla de las fechas de publicación, y se confirma que: si es viernes, hay <ht>HOY TRASNOCHE</ht>, digamos. No quiere decir que salga todos los viernes, eso se analiza en la @sec-num-pala. Significa que cada vez que hubo un nuevo episodio, muy probablemente fue viernes.
 
 Con excepción de 2020, todos los años al menos el 90% de los capítulos se publican los viernes. En 2022 y lo que va de 2023, la totalidad de los episodios estuvieron disponibles los viernes. El verdadero TGIF.
 
@@ -934,6 +934,12 @@ promedio_mayo <- HT_mes |>
   filter(mes_label == "May") |> 
   pull(prom_label)
 
+p_mensual <- HT_tile |> 
+  mutate(mayor_3 = total >= 3) |> 
+  count(mayor_3) |> 
+  mutate(p = round(n/sum(n)*100)) |> 
+  pull(p)
+
 ```
 :::
 
@@ -949,7 +955,7 @@ El lado derecho de la figura muestra la cantidad total de episodios publicados e
 
 En blanco se señalan los meses con más de 10 episodios, que corresponden a las ediciones de <ht>HOY TRASNOCHE DIARIO</ht>. Durante marzo, abril y mayo de 2020, en el período de aislamiento más estricto, tuvimos `r nrow(HT_diario)` episodios en total. Claramente la mayor densidad de episodios.
 
-Desde abril de 2021 tenemos al menos un episodio todos los meses, sin falta. El último mes entero sin actividad fue marzo de 2021.
+Desde abril de 2021 tenemos al menos un episodio todos los meses, sin falta. El último mes entero sin actividad fue marzo de 2021. En el `r p_mensual[2]`% de todos los meses tuvimos **al menos 3** episodios.
 
 ## Serie consecutiva de episodios semanales {#sec-num-pala}
 
@@ -1126,7 +1132,7 @@ g_escalera <- ggplot(data = HT_escalera, aes(x = fecha, y = total)) +
              arrow.fill = "white", curvature = +.1, linewidth = .3, 
              arrow = arrow(angle = 10, length = unit(.3, "line"), type = "closed")) +
   # aclaración eje
-  geom_richtext(x = ymd(20160901), y = 209, label = "Suma total<br>acumulada<br>de episodios", 
+  geom_richtext(x = ymd(20160901), y = 209, label = "Suma <br>acumulada<br>de episodios", 
                 inherit.aes = FALSE, family = "titillium", color = "grey40", 
                 size = 3, fill = NA, label.color = NA, hjust = 0, vjust = 1) +
   # ejes
@@ -1205,7 +1211,7 @@ Como ninguno de los oyentes pone un mango por <ht>HOY TRASNOCHE</ht>, no podemos
 
 Pero si podemos analizar en qué períodos fueron más consistentes y en cuales nos abandonaros.
 
-La @fig-05 muestra un gráfico de escalera. Avanza en dirección horizontal cuando no hay capítulo, y se mueve en vertical cuando hay episodio. Por lo tanto, largos períodos sin capítulos se muestran como rectas horizontales largas; y los períodos de mayor actividad y consistencia, con episodios todas las semanas, se ven como un serrucho diagonal.
+La @fig-05 muestra un gráfico de escalera. Avanza en dirección horizontal cuando no hay capítulo, y se mueve en vertical cuando hay episodio. Por lo tanto, extensos períodos sin capítulos se muestran como rectas horizontales largas; y los períodos de mayor actividad y consistencia, con episodios todas las semanas, se ven como un serrucho diagonal.
 
 Entre el 31 de diciembre de 2020 y el 23 de abril de 2021, en esas 15 semanas, no se publicó nada. La secuencia más extensa sin episodios. El segundo período más largo sin actividad fue 12 semanas en 2017. Ambos períodos son coincidentes con los cuadros grises de la @fig-04.
 
@@ -1496,7 +1502,7 @@ Las nubes de palabras son una manera muy visual de tener una idea de qué térmi
 
 Se contaron todas las palabras presentes en ambos grupos de datos, y se ordenaron de mayor a menor. Para el título se tomaron las 37 palabras más frecuentes. En el primer puesto, para felicidad de todo el pueblo trasnochiter, está <code>poronga</code>, con 8 repeticiones, seguido de <code>película</code> (6) y <code>caca</code> (5). Todas las palabras de la nube tienen al menos 2 repeticiones en los títulos.
 
-Respecto de la nube de palabras de la descripción (lado derecho de la @fig-07), dado que hay una mayor cantidad de palabras, las repeticiones son mayores. En el primer puesto tenemos, con 235 apariciones, el término <code>cine</code>. Para todos los que se preguntaban si HOY TRASNCOCHE es un podcast de cine. Luego siguen <code>semana</code> (187) y <code>películas</code> (100). Todas las palabras tienen al menos 17 apariciones entre todas las descripciones.
+Respecto de la nube de palabras de la descripción (lado derecho de la @fig-07), dado que hay una mayor cantidad de palabras, las repeticiones son mayores. En el primer puesto tenemos, con 235 apariciones, el término <code>cine</code>. Para todos los que se preguntaban si <ht>HOY TRASNCOCHE</ht> es un podcast de cine. Luego siguen <code>semana</code> (187) y <code>películas</code> (100). Todas las palabras tienen al menos 17 apariciones entre todas las descripciones.
 
 Vemos términos históricos como <code>videoclub</code> (96) y <code>portarretratos</code> (95), y términos más recientes como <code>Oti</code> (25).
 
@@ -2082,8 +2088,6 @@ Junto con el análisis de texto, algo con lo que nunca había tratado era con ar
 
 Las imágenes de cada capítulo (según lo encontrado en Spotify) están disponibles en tres resoluciones, 64, 300 y 640 píxeles, cuadradas. El primer paso fue descargar todas las imágenes y registrar la fecha de uso. Luego para agrupar los episodios por su imagen se calculó en color promedio, que es representativo de todas aquellas imágenes repetidas. Para ello se descompuso cada imagen en sus colores básicos (rojo, verde, azul), se promedió para todos los píxeles y se generó un color individual para cada episodio. Luego se agrupó entre estos de acuerdo al color promedio.
 
-Pueden ver las imágenes en los siguientes links: [A](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/A.jpg), [B](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/B.jpg), [C](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/C.jpg), [D](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/D.jpg), [E](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/E.jpg), [F](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/F.jpg), [G](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/G.jpg), [H](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/H.jpg), [I](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/I.jpg), [J](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/J.jpg).
-
 Incluyendo <ht>HOY TRASNOCHE DIARIO</ht>, hay 14 imágenes únicas. Existen dos pares cuya única diferencia es la presencia del logo de POSTA, se agruparon convenientemente quedando dos imágenes, **A** y **C**, de la @fig-10. Para el <ht>HOY PORONGA</ht> aparecen dos disponibles, aunque es una diferencia que no pude detectar visualmente, por lo se que unificaron (**E**). Algo similar sucede con el logo usado actualmente: aparecen dos conjuntos de imágenes, que claramente son las mismas (**J**). Descartando las versiones que a simple vista son idénticas, de las 14 imágenes únicas, quedan 10, de la **A** a la **J**.
 
 La **D** fue utilizada una única vez, en [2019](https://open.spotify.com/episode/6j1TkNXmVec8G7MU5KcwTL), al igual que la **G** en [2020](https://open.spotify.com/episode/6ITrKiYfcqmUKJWfH5vgiz). Muy reflejo de su época. La **I** fue un <ht>HOY PORONGA</ht> especial, dedicado a una [película](https://open.spotify.com/episode/0EatJAAU4faIkxw1J7Zqb2) que se escuchaba poco y se entendía menos. Las imágenes tradicionales, ponele, que identifican a <ht>HOY TRASNOCHE</ht> son la **B** (7 usos), **C** (7), **F** (73) y **J** (75). Y <ht>HOY TRASNOCHE DIARIO</ht>, **H** (67), claro.
@@ -2092,7 +2096,9 @@ La imagen **E** que ilustra los <ht>HOY PORONGA</ht> fue usada en 5 oportunidade
 
 Es claro que ya encontraron su identidad en cuanto al logo, que con pocos cambios, viene siendo el mismo desde finales de 2018 (inicio de imagen **F**).
 
-Personalmente me encanta la imagen **B**, donde vemos a las estrellas del podcast. Entiendo que el logo actual (**J**) ya es un clásico, pero me gustaría, al menos por una temporada, volver a ver a Flor y Calo.
+Personalmente me encanta la imagen **B**, donde vemos a las estrellas del podcast. Entiendo que el logo actual (**J**) ya es un clásico, pero me gustaría, al menos por una temporada, volver a ver a Flor y Calu.
+
+Pueden ver las imágenes en los siguientes links: [A](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/A.jpg), [B](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/B.jpg), [C](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/C.jpg), [D](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/D.jpg), [E](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/E.jpg), [F](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/F.jpg), [G](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/G.jpg), [H](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/H.jpg), [I](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/I.jpg), [J](https://raw.githubusercontent.com/vhgauto/ht/main/u_640/J.jpg).
 
 # Análisis de películas {#sec-pel}
 
@@ -2275,13 +2281,13 @@ tmdb_datos <- read_tsv(here("data/tmdb_datos.tsv"))
 ```
 :::
 
-El primer paso para el análisis de las películas discutidas en <ht>HOY TRASNOCHE</ht> consiste en tener el listado entero de títulos. Gracias a [esta](https://letterboxd.com/matiasec/list/hoy-trasnoche-con-capitulo/detail/) lista de películas en Letterboxd pude llevar a cabo todo lo que se muestra a continuación.
+El primer paso para el análisis de las películas discutidas en <ht>HOY TRASNOCHE</ht> consiste en tener el listado entero de títulos. Gracias a [esta](https://letterboxd.com/matiasec/list/hoy-trasnoche-con-capitulo/detail/) lista en Letterboxd pude llevar a cabo todo lo que se muestra a continuación.
 
 <span style='background-color:#333333'>No estoy a cargo de dicha lista, no doy fe de que estén absolutamente todas las películas analizadas en todos los episodios, ni tampoco revisé una por una cada entrada. Le pegué una leída general, me pareció correcto y proseguí. Además, jamás voy a poner en tela de duda el trabajo de otro trasnochiter.</span>
 
 De acuerdo con la descripción de la lista, “*No son películas mencionadas ni estrenos comentados, son películas a las que le dedicaron un capítulo*”. Además, cada entrada posee el título del episodio correspondiente. Servicio completo.
 
-Esta sección requirió de web scrapping, que es obtener datos a partir de sitios web. Fue la primera vez que lo hice, así que aprendí un montón en el camino. El paquete principal que usé es {rvest}, junto con las herramientas de desarrollo del navegador de Internet, que permite inspeccionar los elementos de interés. Pude obtener el título de cada película y el año de estreno.
+Esta sección requirió de *web scrapping*, que es obtener datos a partir de sitios web. Fue la primera vez que lo hice, así que aprendí un montón en el camino. El paquete principal que usé es [<code>{rvest}</code>](https://rvest.tidyverse.org/), junto con las herramientas de desarrollo del navegador de Internet, que permite inspeccionar los elementos de interés. Pude obtener el título de cada película y el año de estreno.
 
 A partir de la base de datos de [The Movie Database](https://www.themoviedb.org/) (TMDB), accesible a partir del paquete homónimo en <code>R</code>, conseguí más datos. Con el título y el año, pueden obtenerse las listas del elenco, el equipo de producción, detalles técnicos, entre otros.
 
