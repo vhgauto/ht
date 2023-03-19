@@ -61,7 +61,7 @@ execute:
 
 Este reporte está dividido en cinco partes principales. Comienzo con la descripción de la fuente de datos y consideraciones generales (@sec-intro). Los análisis y visualizaciones se dividen en: datos numéricos (@sec-num), como la duración de los episodios, la cantidad de horas totales de contenido anual y las fechas de publicación; palabras (@sec-tex), a partir de los títulos y descripciones de los episodios; imágenes (@sec-img), provenientes de las tapas de los capítulos; y estudio de las películas analizadas (@sec-pel), como actores y directores más frecuentes. Finalmente, conclusiones y agradecimientos.
 
-Tienen el menú desplegable a la izquierda para moverse entre los capítulos y sus secciones.
+En la versión de escritorio tienen el menú desplegable, a la izquierda, para moverse entre los capítulos y sus secciones.
 
 # Aclaraciones iniciales {#sec-intro}
 
