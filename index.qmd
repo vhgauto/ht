@@ -52,7 +52,7 @@ execute:
 <!-- que el contenido (imagen, code) se desplace a la derecha -->
 <!-- https://quarto.org/docs/authoring/article-layout.html#overflowing-content -->
 
-# El único y mejor podcast del mundo {.unnumbered}
+# El único podcast del mundo {.unnumbered}
 
 <!-- cómo personalizar el hipervínculo interno de referencias cruzadas -->
 <!-- https://quarto.org/docs/books/book-crossrefs.html#creating-references -->
@@ -2820,7 +2820,11 @@ A partir de las películas analizadas en los episodios vemos el favoritismo por 
 
 # Gracias {.unnumbered}
 
-Hacer todo esto llevó una cantidad de tiempo insalubre. Más que nada, eso habla más de mis (in)habilidades en la programación y redacción. Sin embargo, lo disfruté muchísimo. Aprender nuevas funciones de <code>R</code>, plasmar en el script aquello que tenía en la mente y después visualizarlo es algo sumamente satisfactorio. Encontrarme con un problema, buscar potenciales soluciones, y golpearme la cabeza contra la pared hasta hallar la solución, no siempre de manera elegante, pero sí funcional. Respecto de las visualizaciones, probar diferentes gráficos, que no salga como querés, borrar todo y empezar de nuevo. Meterme en temas totalmente desconocidos y salir con conocimientos nuevos, como manipular texto e imágenes, y extraer datos de Internet con web scrapping.
+**Flor** y **Calu**, los escucho desde el primer episodio y me acompañaron en muchos momentos, de los buenos y de los otros. Me he reído como nunca en el transporte público gracias a ustedes. Aprendo un montón escuchándolos, de la industria del cine, de su historia, de la producción de películas, de narrativa, de interpretación. Si hay una cosa por las que voy a estar eternamente agradecidos con ustedes es que me hicieron amar aún más el cine. Sé que no soy el único que coincide conmigo. El pueblo trasnochiter eternamente agradecido.
+
+<br><br>
+
+Hacer todo esto llevó una cantidad de tiempo insalubre. Eso más que nada habla de mis (in)habilidades en la programación y redacción. Sin embargo, lo disfruté muchísimo. Aprender nuevas funciones de <code>R</code>, plasmar en el script aquello que tenía en la mente y después visualizarlo es algo sumamente satisfactorio. Encontrarme con un problema, buscar potenciales soluciones, y golpearme la cabeza contra la pared hasta hallar la solución, no siempre de manera elegante, pero sí funcional. Respecto de las visualizaciones, probar diferentes gráficos, que no salga como querés, borrar todo y empezar de nuevo. Meterme en temas totalmente desconocidos y salir con conocimientos nuevos, como manipular texto e imágenes, y extraer datos de Internet con web scrapping.
 
 Si habiendo leído todo, llegaste hasta acá, espero haya sido una experiencia interesante. Muchas gracias.
 
@@ -2831,8 +2835,6 @@ Si revisando el código encontraste algo grave, chiflá. No lo dudes.
 Si te gustan las infografías, tomé mucha inspiración de [chartr](https://read.chartr.co/) y [VISUAL CAPITALIST](https://www.visualcapitalist.com/).
 
 Este proyecto me permitió aprender muchas cosas y afianzar conocimientos y técnicas de extracción, procesamiento y visualización de datos. Esta idea surgió a partir de los objetivos planteados por [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday). Trabajar con datos *de la realidad*, practicar y aprender.
-
-**Flor** y **Calu**, los escucho desde el primer episodio y me acompañaron en muchos momentos de vida, de los buenos y de los otros. Me he reído como nunca en el transporte público gracias a ustedes. Aprendo un montón escuchándolos, de la industria del cine, de su historia, de la producción de películas, de narrativa, de interpretación. Si hay una cosa por las que voy a estar eternamente agradecidos con ustedes es que me hicieron amar aún más el cine. Sé que no soy el único que coincide conmigo. El pueblo trasnochiter eternamente agradecido.
 
 Y si te gustó, acá abajo en los comentarios déjame un emoji de 🔥, dale a la campanita y dale me gusta que me ayudás un montón.
 
