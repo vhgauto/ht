@@ -63,6 +63,8 @@ Este reporte está dividido en cinco partes principales. Comienzo con la descrip
 
 En la versión de escritorio tienen el menú desplegable, a la izquierda, para moverse entre los capítulos y sus secciones.
 
+<span style='background-color:#333333'>NO HAY ANÁLISIS DEL CONTENIDO DE LOS AUDIOS. Lamentablemente (aún) no tengo acceso a una herramienta que me permita la transcripción automáticamente de los episodios. [Acá](https://twitter.com/vhgauto/status/1638011962222075904) explico un poco las opciones. Pero ni bien le encuentre la vuelta, me voy a poner manos a la obra.</span>
+
 # Aclaraciones iniciales {#sec-intro}
 
 ::: {.column-screen-inset-right}
