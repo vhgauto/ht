@@ -222,6 +222,8 @@ Dividí los episodios en tres grandes grupos: <ht>HOY TRASNOCHE</ht> propiamente
 
 No soy ningún experto en análisis de datos ni en programación. Soy un entusiasta de R, sigo <ht>HOY TRASNOCHE</ht> desde el primer episodio, y nunca me lo pierdo. Hacer todo esto me permitió aprender un montón de programación, manejo de datos, visualización y disfruté muchísimo todo el proceso.
 
+<span style='background-color:#333333'>Actualizado al `r format(max(HT_trad$release_date), "%d/%m/%Y")`. A fin de año voy a renovar las figuras con los datos nuevos.</span>
+
 # Análisis de datos numéricos {#sec-num}
 
 Para esta sección, los datos más relevantes son la duración de los episodios y la fecha de publicación, extraídos del perfil de <ht>HOY TRASNOCHE</ht> de Spotify. Con eso es posible generar boxplots anuales de cuánto duran los episodios (@fig-01), cantidad anual de horas de contenido ([-@fig-02]), porcentaje de publicación los viernes ([-@fig-03]), cantidad promedio de episodios por mes ([-@fig-04]) y serie consecutiva de semanas con/sin episodios ([-@fig-05]).
@@ -1677,7 +1679,9 @@ cel <- tibble(n = paste0("n_", c("ah", "sl", "nc", "ow", "em"))) |>
   mutate(x = c(-Inf, -Inf, Inf, Inf, 0)) |> 
   mutate(y = c(Inf, -Inf, Inf, -Inf, -1))
 
-set.seed(2024); g_bigram <- HT_bigram %>%
+set.seed(2024)
+
+g_bigram <- HT_bigram %>%
   graph_from_data_frame() %>%
   ggraph(layout = "fr") +
   # celebridades
@@ -2843,6 +2847,8 @@ Y si te gustó, acá abajo en los comentarios déjame un emoji de 🔥, dale a l
 <br><br>
 
 Este reporte, el código de programación que lo creó, las imágenes usadas y las bases de datos están disponibles en [este](https://github.com/vhgauto/ht) repositorio en GitHub. Me encuentran en [Twitter](https://twitter.com/vhgauto) e [Instagram](https://www.instagram.com/vhgauto/).
+
+<span style='color:#1a1a1a'>`r now() |> ymd_hms(quiet = TRUE)`</span>
 
 <br><br><br>
 
