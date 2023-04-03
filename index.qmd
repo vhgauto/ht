@@ -206,7 +206,7 @@ HTD <- glue("<span style='font-family:friz_bold; font-weight: bold; color:#ffc10
 ```
 :::
 
-<span style='background-color:#333333'>Antes que nada, según un coso que cuenta el tiempo de lectura, leer todo esto te va a llevar algo más de **25 minutos**. Segundo, la versión TL;DR es ir directamente a las imágenes (son 13).</span>
+<span style='background-color:#333333'>Antes que nada, según un coso que cuenta el tiempo de lectura, leer todo esto te va a llevar algo más de **25 minutos**. Segundo, la versión TL;DR es ir directamente a las imágenes (son 14).</span>
 
 Todos los análisis llevados a cabo utilizan dos grandes bases de datos. Para los episodios, la que está disponible en el perfil de <ht>HOY TRASNOCHE</ht> en [Spotify](https://open.spotify.com/show/6C4MdNWQSPhmzBlIVau30e); para las películas analizadas, [The Movie Database](https://www.themoviedb.org/) (TMDB) desde donde obtuve los detalles.
 
