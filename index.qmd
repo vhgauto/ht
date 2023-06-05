@@ -24,6 +24,7 @@ format:
     backgroundcolor: "black"
     fontcolor: "white"
     mainfont: Titillium Web
+    fontsize: 20px
 editor: source
 editor_options: 
   chunk_output_type: console
@@ -98,9 +99,9 @@ showtext_opts(dpi = 300)
 
 # íconos
 # browseURL("https://albert-rapp.de/posts/ggplot2-tips/08_fonts_and_icons/08_fonts_and_icons.html")
-font_add("fa-reg", here("icon/Font Awesome 5 Free-Regular-400.otf"))
-font_add("fa-brands", here("icon/Font Awesome 5 Brands-Regular-400.otf"))
-font_add("fa-solid", here("icon/Font Awesome 5 Free-Solid-900.otf"))
+font_add("fa-reg", here("icon/Font Awesome 6 Free-Regular-400.otf"))
+font_add("fa-brands", here("icon/Font Awesome 6 Brands-Regular-400.otf"))
+font_add("fa-solid", here("icon/Font Awesome 6 Free-Solid-900.otf"))
 
 # C.- datos ---------------------------------------------------------------
 
@@ -210,7 +211,7 @@ HTD <- glue("<span style='font-family:friz_bold; font-weight: bold; color:#ffc10
 
 Todos los análisis llevados a cabo utilizan dos grandes bases de datos. Para los episodios, la que está disponible en el perfil de <ht>HOY TRASNOCHE</ht> en [Spotify](https://open.spotify.com/show/6C4MdNWQSPhmzBlIVau30e); para las películas analizadas, [The Movie Database](https://www.themoviedb.org/) (TMDB) desde donde obtuve los detalles.
 
-Para todos los gráficos aquí exhibidos usé lenguaje de programación <code>R</code> (4.2.1), en el entorno de edición [RStudio](https://posit.co/products/open-source/rstudio/) (2022.12.0 Build 353). Este reporte se confeccionó usando [Quarto](https://quarto.org/) (1.2.335).
+Para todos los gráficos aquí exhibidos usé lenguaje de programación <code>R</code> (4.2.1), en el entorno de edición [RStudio](https://posit.co/products/open-source/rstudio/) (2022.12.0 Build 353). Este reporte se confeccionó usando [Quarto](https://quarto.org/) (`r quarto::quarto_version()`).
 
 Los datos de Spotify son accesibles mediante el paquete [<code>{spotifyr}</code>](https://www.rcharlie.com/spotifyr/index.html). Es necesario contar con acceso a la [API](https://developer.spotify.com/dashboard/applications) y generar sus credenciales. De Spotify puede obtenerse el título del episodio, la descripción, la duración, el idioma, el tipo de contenido, la fecha de publicación, el enlace para escucharlo, la dirección donde se aloja la imagen que ilustra el episodio, un código de identificación, entre otros.
 
@@ -1801,7 +1802,7 @@ mini_desc <- read_tsv(here("data/spotify_datos_url.tsv")) |>
   mutate(file = glue("{format(fecha, '%Y%m%d')}_{str_sub(url, start = -5, end = -1)}"))
 
 # función para descarga automática de todas las miniaturas de HT, 
-# en tamaño 64x64, .jpg
+# en tamaño 64x64, .jpg (288 imágenes)
 # map2(.x = mini_desc$url,
 #      .y = glue("{here()}/mini_64/{mini_desc$file}.jpg"),
 #      ~ download.file(url = .x, destfile = .y, method = "curl"))
