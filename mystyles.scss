@@ -10,7 +10,7 @@ $g: #333333;
 // fuente
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-@import url('friz_bold', 'firz/Friz Quadrata Bold.otf');
+@import url('friz_bold', 'friz/Friz Quadrata Bold.otf');
 
 // tabla de contenidos, toc
 // https://quarto.org/docs/output-formats/html-themes.html#table-of-contents
@@ -36,27 +36,35 @@ ht {
   font-weight: bold;
 }
 
+// formato de texto de script
 code {
   color: $a;
   background-color: $g;
   font-family: Monospace;
 }
 
-.toc-section-number {
-  color: $r;
+// lós números en las secciones en rojo
+.header-section-number {
+    color: $r;
 }
 
-.sidebar nav[role=doc-toc] ul>li>a.active {
-    border-left: 1px solid $a;
-    color: $a !important;
-}
-
-.sidebar nav[role=doc-toc] ul>li>ul>li>a.active {
-    border-left: 1px solid #ffc10e;
-    color: #ffc10e !important;
+// en la barra lateral, el color de los links internos sean en rojo
+.nav-link.active .header-section-number {
+    color: $r;
 }
 
 // cuando paso el mouse sobre un link, pasa de rojo ($r) a amarillo ($a)
 a:hover {
     color: $a
+}
+
+// en la barra lateral, al pasar el mouse sobre los links, que sea rojo
+.sidebar nav[role=doc-toc] ul>li>a:hover, .sidebar nav[role=doc-toc] ul>li>ul>li>a:hover {
+    color: $r !important;
+}
+
+// en la barra lateral, al hacer click sobre los links, que sea amarillo
+.sidebar nav[role=doc-toc] ul>li>a.active, .sidebar nav[role=doc-toc] ul>li>ul>li>a.active {
+    border-left: 1px solid #ffc10e;
+    color: $a !important;
 }
